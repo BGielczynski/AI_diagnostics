@@ -11,26 +11,29 @@ def main():
     
     print(f"Erfolgreich {len(df)} Signale geladen.")
 
-    # Neue Spalte für STFT-Ergebnisse (optional)
-    # df['Zxx'] = None 
-    
-    # 2. Über jedes Signal iterieren und STFT berechnen
+    # STFT-Parameter (Optimierung gemäß Aufgabenstellung)
+    WINDOW   = 'hann'  # Fensterfunktion
+    NPERSEG  = 512     # Fensterlänge in Samples
+    NOVERLAP = 256     # Fensterfortsetzrate (50% Überlappung)
+
+    # 2. Über jedes Signal iterieren, STFT berechnen und im DataFrame speichern
+    stft_results = []
     for index, row in df.iterrows():
         sig = row['sig']
-        fs = row['fs']  # Neu: Wir haben jetzt die Abtastrate im DataFrame!
+        fs  = row['fs']
         
-        # STFT berechnen (nperseg gibt die Fenstergröße an)
-        f, t, Zxx = calculate_stft(sig, fs, nperseg=256)
-        
-        # Du kannst das Ergebnis nun weiterverarbeiten oder speichern:
-        # df.at[index, 'Zxx'] = Zxx 
+        f, t, Zxx = calculate_stft(sig, fs, nperseg=NPERSEG, noverlap=NOVERLAP, window=WINDOW)
+        stft_results.append(Zxx)
         
         print(f"STFT berechnet für {row['fn']}: Zxx Shape = {Zxx.shape}")
-        
-        # Beispiel: Das Spektrogramm für das allererste Signal plotten und abbrechen
-        if index == 0:
-            plot_spectrogram(t, f, Zxx, title=f"Spektrogramm - {row['fn']}")
-            break
+
+    # STFT-Ergebnisse im DataFrame unter Key 'stft' speichern (Aufgabenanforderung)
+    df['stft'] = stft_results
+
+    # 3. Spektrogramme für alle Signale darstellen
+    for index, row in df.iterrows():
+        f, t, Zxx = calculate_stft(row['sig'], row['fs'], nperseg=NPERSEG, noverlap=NOVERLAP, window=WINDOW)
+        plot_spectrogram(t, f, Zxx, title=f"Spektrogramm - {row['fn']}")
 
 if __name__ == '__main__':
     main()

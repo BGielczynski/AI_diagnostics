@@ -1,23 +1,28 @@
+# pyrefly: ignore [missing-import]
 import numpy as np
+# pyrefly: ignore [missing-import]
 import matplotlib.pyplot as plt
+# pyrefly: ignore [missing-import]
 from scipy import signal
 
-def calculate_stft(sig, fs, nperseg=256, noverlap=None):
+def calculate_stft(sig, fs, nperseg=256, noverlap=None, window='hann'):
     """
     Berechnet die Kurzzeit-Fourier-Transformation (STFT) für ein gegebenes Signal.
     
     Args:
         sig (np.ndarray): Das Audiosignal.
         fs (int): Die Abtastrate (Sampling Frequency) des Signals.
-        nperseg (int): Länge jedes Segments für die STFT.
-        noverlap (int): Anzahl der überlappenden Samples zwischen den Segmenten.
+        nperseg (int): Fensterlänge in Samples.
+        noverlap (int): Anzahl der überlappenden Samples (Fensterfortsetzrate).
+                        Standard: nperseg // 2 (50% Überlappung).
+        window (str): Fensterfunktion, z.B. 'hann', 'hamming', 'blackman', 'boxcar'.
         
     Returns:
-        f (np.ndarray): Array der Frequenz-Werte.
-        t (np.ndarray): Array der Zeit-Werte.
+        f (np.ndarray): Array der Frequenz-Werte [Hz].
+        t (np.ndarray): Array der Zeit-Werte [s].
         Zxx (np.ndarray): STFT der Signaldaten (komplexes Array).
     """
-    f, t, Zxx = signal.stft(sig, fs, nperseg=nperseg, noverlap=noverlap)
+    f, t, Zxx = signal.stft(sig, fs, window=window, nperseg=nperseg, noverlap=noverlap)
     return f, t, Zxx
 
 def plot_spectrogram(t, f, Zxx, title="Spektrogramm"):
