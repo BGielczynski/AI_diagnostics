@@ -1,8 +1,7 @@
 import pandas as pd
 import os
 import glob
-# Eventuell scipy.io.wavfile oder librosa importieren, um .wav Dateien zu lesen
-# from scipy.io import wavfile
+import soundfile as sf
 
 class DataFrameManager:
     """
@@ -20,12 +19,41 @@ class DataFrameManager:
         Durchsucht den data_dir nach allen .wav Dateien, liest die Signale ein
         und füllt das DataFrame.
         """
-        # TODO: Iteriere über alle Unterordner in data/Z01 und data/Z05
-        # TODO: Nutze glob oder os.walk, um alle .wav Dateien zu finden
-        # TODO: Lese jede Datei ein und hänge die Daten ans Dataframe an
-        pass
+        # Suche alle .wav Dateien im data_dir und in allen Unterordnern
+        search_pattern = os.path.join(self.data_dir, '**', '*.wav')
+        wav_files = glob.glob(search_pattern, recursive=True)
         
-    def extract_metadata_from_filename(self, filepath: str) -> dict:
+        data_list = []
+        for filepath in wav_files:
+            filename = os.path.basename(filepath)
+            
+            # Signaldaten einlesen
+            try:
+                sig, samplerate = sf.read(filepath)
+            except Exception as e:
+                print(f"Fehler beim Lesen von {filename}: {e}")
+                continue
+            
+            # Metadaten extrahieren
+            metadata = self.extract_metadata_from_filename(filename)
+            
+            # Alles in ein Dictionary packen, das den Spalten entspricht
+            row_data = {
+                'fn': filename,
+                'sig': sig,
+                'spec': metadata.get('spec'),
+                'mID': metadata.get('mID'),
+                'time': metadata.get('time'),
+                'rID': metadata.get('rID'),
+                'sID': metadata.get('sID')
+            }
+            data_list.append(row_data)
+            
+        # DataFrame mit allen gesammelten Daten aktualisieren
+        if data_list:
+            self.df = pd.DataFrame(data_list)
+        
+    def extract_metadata_from_filename(self, filename: str) -> dict:
         """
         Extrahiert die benötigten Metadaten direkt aus dem Dateinamen oder Pfad.
         
@@ -37,9 +65,23 @@ class DataFrameManager:
         - 'rID': Aufnahme-ID
         - 'sID': Sensor-ID (z.B. Ch1, Ch2)
         """
-        # Beispiel Dateiname: Z01_Pos01_Crp1k_200k_0000_1307031436_00000_14_Ch1.wav
-        # TODO: Den Dateinamen am Unterstrich ("_") splitten und die Werte zuordnen
-        metadata = {}
+        # Dateiendung entfernen
+        name_without_ext = os.path.splitext(filename)[0]
+        # Beispiel: Z01_Pos01_Crp1k_200k_0000_1307031436_00000_14_Ch1
+        parts = name_without_ext.split('_')
+        
+        # Sicherstellen, dass das Format wie erwartet ist (mind. 9 Teile durch extra Unterstrich in Crp1k_200k)
+        if len(parts) < 9:
+            return {}
+            
+        metadata = {
+            'spec': parts[0],      # Z01 oder Z05
+            'mID': parts[4],       # 0000 (Messungs-ID)
+            'time': parts[5],      # 1307031436 (Zeitstempel)
+            'rID': parts[6],       # 00000 (Aufnahme-ID)
+            'sID': parts[8]        # Ch1, Ch2 oder Wav3 (Sensor-ID)
+        }
+        
         return metadata
 
     def get_dataframe(self) -> pd.DataFrame:
@@ -55,5 +97,6 @@ if __name__ == "__main__":
     manager = DataFrameManager(data_dir=data_path)
     manager.load_signals()
     
+    print(f"Anzahl geladener Signale: {len(manager.get_dataframe())}")
     print("Dataframe Head:")
     print(manager.get_dataframe().head())
