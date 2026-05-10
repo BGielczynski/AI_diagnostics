@@ -1,0 +1,11 @@
+*.DS_Store
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+.vscode/
+*.log
+*.pdf
+*.png
+!Task_1/AS1.png
+!Task_1/Seminaraufgabe-1.pdf
