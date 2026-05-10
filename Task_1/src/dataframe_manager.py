@@ -12,7 +12,7 @@ class DataFrameManager:
     def __init__(self, data_dir: str):
         self.data_dir = data_dir
         # Das Dataframe mit den geforderten Spalten (Keys) initialisieren
-        self.df = pd.DataFrame(columns=['fn', 'sig', 'spec', 'mID', 'time', 'rID', 'sID'])
+        self.df = pd.DataFrame(columns=['fn', 'sig', 'fs', 'spec', 'mID', 'time', 'rID', 'sID'])
 
     def load_signals(self):
         """
@@ -41,6 +41,7 @@ class DataFrameManager:
             row_data = {
                 'fn': filename,
                 'sig': sig,
+                'fs': samplerate,
                 'spec': metadata.get('spec'),
                 'mID': metadata.get('mID'),
                 'time': metadata.get('time'),
