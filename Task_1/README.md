@@ -1,6 +1,7 @@
 [members]
 Benjamin Gielczynski
 Tim Giese
+Victor Domke
 
 [Organisatorisches]
 python scripts + Presentation 1 day in advance (einen Tag vor 04.06.2026) per github (or email as archive file, zip, not python!)
