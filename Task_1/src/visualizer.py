@@ -20,7 +20,7 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
 
     for s_id in s_ids:
         print(f"Erstelle Übersicht für Sensor: {s_id}")
-        fig, axes = plt.subplots(len(r_ids), len(specs), figsize=(18, 12), sharex=True, sharey=True)
+        fig, axes = plt.subplots(len(r_ids), len(specs), figsize=(12, 9), sharex=True, sharey=True)
         fig.suptitle(f"Spektrogramm-Vergleich | Sensor: {s_id}\nOben: rID 00000 | Unten: rID 00001", fontsize=16)
         
         # Plotten
@@ -33,12 +33,14 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
                     row = signal_row.iloc[0]
                     f, t, Zxx = calculate_stft(row['sig'], row['fs'], **stft_params)
                     magnitude = np.abs(Zxx)
-                    
                     im = ax.pcolormesh(t, f, magnitude, shading='gouraud')
                     
                     ax.set_title(f"{spec} | Recording {r_id}")
                     if j == 0: ax.set_ylabel('Frequenz [Hz]')
                     if i == len(r_ids) - 1: ax.set_xlabel('Zeit [s]')
+                    
+                    # Begrenzung auf den relevanten Bereich des Chirps (200 kHz)
+                    ax.set_ylim(0, 200000)
                 else:
                     ax.text(0.5, 0.5, "Keine Daten", ha='center', va='center')
 
