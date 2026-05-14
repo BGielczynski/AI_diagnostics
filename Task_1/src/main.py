@@ -14,8 +14,8 @@ def main():
 
     # STFT-Parameter (Optimierung gemäß Aufgabenstellung)
     WINDOW   = 'hann'  # Fensterfunktion
-    NPERSEG  = 512     # Fensterlänge in Samples
-    NOVERLAP = 256     # Fensterfortsetzrate (50% Überlappung)
+    NPERSEG  = 550     # Fensterlänge in Samples
+    NOVERLAP = NPERSEG * 0.9    # Fensterfortsetzrate (50% Überlappung)
 
     # 2. Über jedes Signal iterieren, STFT berechnen und im DataFrame speichern
     stft_results = []
