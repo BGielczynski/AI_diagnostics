@@ -6,5 +6,6 @@
 - [x] Window, nperseg und noverlap anpassen um die Darstellung zu optimieren (Hann, 512, 256)
 
 [Noch zu tun]
-- Abschlusspräsentation vorbereiten
-- Fachliche Diskussion vorbereiten
+- [ ] Indentifizieren des defekten Zahnrades basierend auf den Signalen
+- [ ] Begründung der Wahl des defekten Zahnrades.
+- [ ] Abschlusspräsentation vorbereiten
