@@ -1,8 +1,5 @@
-# pyrefly: ignore [missing-import]
 import numpy as np
-# pyrefly: ignore [missing-import]
 import matplotlib.pyplot as plt
-# pyrefly: ignore [missing-import]
 from scipy import signal
 
 def calculate_stft(sig, fs, nperseg=256, noverlap=None, window='hann'):
@@ -25,14 +22,18 @@ def calculate_stft(sig, fs, nperseg=256, noverlap=None, window='hann'):
     f, t, Zxx = signal.stft(sig, fs, window=window, nperseg=nperseg, noverlap=noverlap)
     return f, t, Zxx
 
-def plot_spectrogram(t, f, Zxx, title="Spektrogramm"):
+def plot_spectrogram(t, f, Zxx, title="Spektrogramm", fs=None):
     plt.figure(figsize=(10,5))
-    # Betragsspektrum berechnen (oft in dB für bessere Visualisierung: 20 * np.log10(np.abs(Zxx) + 1e-10))
+    # Betragsspektrum (linear) wie zu Beginn
     magnitude = np.abs(Zxx)
-    plt.pcolormesh(t, f, magnitude, shading='gouraud')
+    
+    # Plotten mit pcolormesh
+    im = plt.pcolormesh(t, f, magnitude, shading='gouraud')
+    
     plt.title(title)
     plt.ylabel('Frequenz [Hz]')
     plt.xlabel('Zeit [s]')
-    plt.colorbar(label='Amplitude')
+    
+    plt.colorbar(im, label='Amplitude')
     plt.tight_layout()
     plt.show()

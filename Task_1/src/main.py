@@ -1,6 +1,7 @@
 import os
 from dataframe_manager import DataFrameManager
-from stft_processor import calculate_stft, plot_spectrogram
+from visualizer import plot_dual_spectrograms
+from stft_processor import calculate_stft
 
 def main():
     # 1. Datenpfad festlegen und Signale laden
@@ -30,10 +31,8 @@ def main():
     # STFT-Ergebnisse im DataFrame unter Key 'stft' speichern (Aufgabenanforderung)
     df['stft'] = stft_results
 
-    # 3. Spektrogramme für alle Signale darstellen
-    for index, row in df.iterrows():
-        f, t, Zxx = calculate_stft(row['sig'], row['fs'], nperseg=NPERSEG, noverlap=NOVERLAP, window=WINDOW)
-        plot_spectrogram(t, f, Zxx, title=f"Spektrogramm - {row['fn']}")
+    # 3. Spektrogramme in zwei Fenstern darstellen (visualizer.py)
+    plot_dual_spectrograms(df, NPERSEG, NOVERLAP, WINDOW)
 
 if __name__ == '__main__':
     main()
