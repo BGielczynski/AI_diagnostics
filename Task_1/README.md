@@ -1,7 +1,8 @@
 [members]
-Benjamin Gielczynski,
-Tim Giese,
-Victor Domke 
+Benjamin,Gielczynski,Benjamin.Gielczynski@b-tu.de,
+David,"von Rueden",David.vonRueden@b-tu.de,
+Tim,Giese,Tim.Giese@b-tu.de,
+Victor,Domke,domkevic@b-tu.de,
 
 [Organisatorisches]
 python scripts + Presentation 1 day in advance (einen Tag vor 04.06.2026) per github (or email as archive file, zip, not python!)
