@@ -9,9 +9,12 @@ Tim Giese, Benjamin Gielczynski, Victor Domke, David von Rüden, Simon Brockhoff
 ![Ch2 Signale in der Kurzzeit-FFT](docs/Ch2_Spectro.png)
 
 ## Vergleich der Signale:
-Die Z01 Signale schwingen Länger, dies lässt sich vorallem in Frequenzen von 0 - 25000 Hz sehen. Außerdem erkennt man bei Z05, dass die Signale eher gestreckt sind im Vergleich zu Z01.
+Die Z01 Signale schwingen Länger, dies lässt sich vorallem in Frequenzen von 0 - 25000 Hz sehen. 
+Außerdem erkennt man bei Z05, dass die lücken zwischen den perioden sind deutlich erkennbar und haben eine Amplitude von annähernd Null.
 
 ## Identifizieren des defekten Zahnrades:
-Anhand des Vergleichs der Signale können wir erkennen, dass bei Z05 ein Defekt vorliegen muss, da das Signal eine verkürzte Schwingungdauer aufweist, also demnach über ein schnelleres Abklingverhalten verfügt, dies lässt die Annahme zu das die Schwingungen von etwas unterbrochen werden.
+Anhand des Vergleichs der Signale können wir erkennen, dass bei Z05 ein Defekt vorliegen muss, 
+da das Signal eine verkürzte Schwingungdauer aufweist, also demnach über ein schnelleres Abklingverhalten verfügt, 
+dies lässt die Annahme zu das die Schwingungen von etwas unterbrochen werden.
 
 
