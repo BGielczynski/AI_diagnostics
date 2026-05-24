@@ -16,7 +16,7 @@
         - [x] main (Tim)
     - [x] Erklärung der stft - Parameter
         - [x] manuelle (Tim)
-        - [ ] matematische (Benny)
+        - [x] matematische (Benny)
     - [x] Vergleich der Zahnräder anhand der Spektogramme (Benny & Tim)
     - [x] Entscheidung welches Defekt ist mit Begründung ?
 - [ ] Aufteilung der Präsentation noch finalisieren
