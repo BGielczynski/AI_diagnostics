@@ -12,10 +12,10 @@ def main():
     
     print(f"Erfolgreich {len(df)} Signale geladen.")
 
-    # STFT-Parameter (Optimierung gemäß Aufgabenstellung)
-    WINDOW   = 'hann'  # Fensterfunktion
-    NPERSEG  = 550     # Fensterlänge in Samples
-    NOVERLAP = NPERSEG * 0.9    # Fensterfortsetzrate (50% Überlappung)
+    # STFT-Parameter (bereits optimiert)
+    WINDOW   = 'hann'           # Fensterfunktion
+    NPERSEG  = 550              # Fensterlänge in Samples
+    NOVERLAP = NPERSEG * 0.5    # Fensterfortsetzrate (50% Überlappung)
 
     # 2. Über jedes Signal iterieren, STFT berechnen und im DataFrame speichern
     stft_results = []
@@ -28,10 +28,10 @@ def main():
         
         print(f"STFT berechnet für {row['fn']}: Zxx Shape = {Zxx.shape}")
 
-    # STFT-Ergebnisse im DataFrame unter Key 'stft' speichern (Aufgabenanforderung)
+    # STFT-Ergebnisse im DataFrame unter Key 'stft' speichern
     df['stft'] = stft_results
 
-    # 3. Spektrogramme in zwei Fenstern darstellen (visualizer.py)
+    # 3. Spektrogramme geordnet zu vergleich darstellen (fkt aus visualizer.py)
     plot_dual_spectrograms(df, NPERSEG, NOVERLAP, WINDOW)
 
 if __name__ == '__main__':

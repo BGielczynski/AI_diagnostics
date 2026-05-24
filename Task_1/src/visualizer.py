@@ -6,12 +6,13 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
     """
     Erstellt für jeden Sensor (Ch1, Ch2, Wav3) eine Übersicht:
     - Zeilen: rID 00000 und 00001
-    - Spalten: Z01 (gut) und Z05 (Fehler)
+    - Spalten: Z01 und Z05
     """
     s_ids = ["Ch1", "Ch2", "Wav3"]
     r_ids = ["00000", "00001"]
     specs = ["Z01", "Z05"]
     
+    # Dictionary mit parametern erstellen
     stft_params = {
         'nperseg': nperseg,
         'noverlap': noverlap,
@@ -31,7 +32,7 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
                 
                 if not signal_row.empty:
                     row = signal_row.iloc[0]
-                    f, t, Zxx = calculate_stft(row['sig'], row['fs'], **stft_params)
+                    f, t, Zxx = calculate_stft(row['sig'], row['fs'], **stft_params)    # berechnung der stft
                     magnitude = np.abs(Zxx)
                     im = ax.pcolormesh(t, f, magnitude, shading='gouraud')
                     
@@ -39,7 +40,7 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
                     if j == 0: ax.set_ylabel('Frequenz [Hz]')
                     if i == len(r_ids) - 1: ax.set_xlabel('Zeit [s]')
                     
-                    # Begrenzung auf den relevanten Bereich des Chirps (200 kHz)
+                    # Begrenzung auf den relevanten Bereich der Response (200 kHz)
                     ax.set_ylim(0, 200000)
                 else:
                     ax.text(0.5, 0.5, "Keine Daten", ha='center', va='center')
