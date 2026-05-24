@@ -9,3 +9,14 @@
 - [ ] Indentifizieren des defekten Zahnrades basierend auf den Signalen
 - [ ] Begründung der Wahl des defekten Zahnrades.
 - [ ] Abschlusspräsentation vorbereiten
+    - [ ] Code-Vorstellung
+        - [ ] dataframe_manager (Benny)
+        - [ ] stft_processor ?
+        - [ ] visualizer ?
+        - [ ] main (Tim)
+    - [ ] Erklärung der stft - Parameter
+        - [ ] manuelle (Tim)
+        - [ ] matematische (Benny)
+    - [ ] Vergleich der Zahnräder anhand der Spektogramme (Benny & Tim)
+    - [ ] Entscheidung welches Defekt ist mit Begründung ?
+
