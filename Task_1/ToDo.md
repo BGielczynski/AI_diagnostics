@@ -6,17 +6,18 @@
 - [x] Window, nperseg und noverlap anpassen um die Darstellung zu optimieren (Hann, 512, 256)
 
 [Noch zu tun]
-- [ ] Indentifizieren des defekten Zahnrades basierend auf den Signalen
-- [ ] Begründung der Wahl des defekten Zahnrades.
-- [ ] Abschlusspräsentation vorbereiten
-    - [ ] Code-Vorstellung
-        - [ ] dataframe_manager (Benny)
-        - [ ] stft_processor ?
-        - [ ] visualizer ?
-        - [ ] main (Tim)
-    - [ ] Erklärung der stft - Parameter
-        - [ ] manuelle (Tim)
+- [x] Indentifizieren des defekten Zahnrades basierend auf den Signalen
+- [x] Begründung der Wahl des defekten Zahnrades.
+- [x] Abschlusspräsentation vorbereiten
+    - [x] Code-Vorstellung
+        - [x] dataframe_manager ?
+        - [x] stft_processor ?
+        - [x] visualizer ?
+        - [x] main (Tim)
+    - [x] Erklärung der stft - Parameter
+        - [x] manuelle (Tim)
         - [ ] matematische (Benny)
-    - [ ] Vergleich der Zahnräder anhand der Spektogramme (Benny & Tim)
-    - [ ] Entscheidung welches Defekt ist mit Begründung ?
+    - [x] Vergleich der Zahnräder anhand der Spektogramme (Benny & Tim)
+    - [x] Entscheidung welches Defekt ist mit Begründung ?
+- [ ] Aufteilung der Präsentation noch finalisieren
 
