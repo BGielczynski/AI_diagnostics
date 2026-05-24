@@ -1,1 +1,0 @@
-""" Logik zum Vergleich & Identifikation """
