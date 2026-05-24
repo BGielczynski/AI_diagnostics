@@ -12,6 +12,8 @@ Wahl der Fensterlänge: Mit Fensterlänge von 400 messpunkten gestartet
 
 => Optimalwert bei ungefähr 500 - 600 => 550 finaler Wert
 
+HIER NOCHMAL SCHAUEN: Fenterlänge anpassen an gesamtlänge des Signals damit letztes fenster nicht abgeschnitten wird?
+
 Überlappung: Bei 50% gestartet.
 - niedrigere Überlappung (bis 0 getestet in 10er schritten) macht periodische änderungen in der häufigkeit der Frequenzen etwas schlechter sichtbar.
 - bei zu hoher überlappung wird das spektogramm ebenfalls etwas verschwommener -> Details gehen verloren?
