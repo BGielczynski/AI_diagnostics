@@ -7,8 +7,6 @@ Tim Giese, Benjamin Gielczynski, Victor Domke, David von Rüden, Simon Brockhoff
 ![Ch1 Signale in der Kurzzeit-FFT](docs/Ch1_Spectro.png)
 ### Ch2 signals: window-length: 550, overlap: 50%, function: "hann"
 ![Ch2 Signale in der Kurzzeit-FFT](docs/Ch2_Spectro.png)
-### Wav3 signals: window-length: 550, overlap: 50%, function: "hann"
-![Wav3 Signale in der Kurzzeit-FFT](docs/Wav3_Spectro.png)
 
 ## Vergleich der Signale:
 Die Z01 Signale schwingen Länger, dies lässt sich vorallem in Frequenzen von 0 - 25000 Hz sehen. Außerdem erkennt man bei Z05, dass die Signale eher gestreckt sind im Vergleich zu Z01.
