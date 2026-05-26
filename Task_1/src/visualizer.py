@@ -25,6 +25,7 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
         fig.suptitle(f"Spektrogramm-Vergleich | Sensor: {s_id}\nOben: rID 00000 | Unten: rID 00001", fontsize=16)
         
         # Plotten
+        scale = 4 # Skalierung für Amplituden im Spektrogramm
         for i, r_id in enumerate(r_ids):
             for j, spec in enumerate(specs):
                 ax = axes[i, j]
@@ -32,8 +33,8 @@ def plot_dual_spectrograms(df, nperseg, noverlap, window):
                 
                 if not signal_row.empty:
                     row = signal_row.iloc[0]
-                    f, t, Zxx = calculate_stft(row['sig'], row['fs'], **stft_params)    # berechnung der stft
-                    magnitude = np.abs(Zxx)
+                    f, t, Zxx = calculate_stft(row['sig'], row['fs'], **stft_params)    # Berechnung der stft
+                    magnitude = np.multiply(np.abs(Zxx), scale) # Macht Amplituden besser sichtbar 
                     im = ax.pcolormesh(t, f, magnitude, shading='gouraud')
                     
                     ax.set_title(f"{spec} | Recording {r_id}")
