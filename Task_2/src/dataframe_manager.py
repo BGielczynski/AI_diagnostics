@@ -12,7 +12,7 @@ class DataFrameManager:
     def __init__(self, data_dir: str):
         self.data_dir = data_dir
         # Das Dataframe mit keys initialisieren
-        self.df = pd.DataFrame(columns=['fn', 'sig', 'fs', 'spec', 'mID', 'time', 'rID', 'sID'])
+        self.df = pd.DataFrame(columns=['fn', 'sig', 'fs', 'spec', 'pos', 'mID', 'time', 'rID', 'sID'])
 
     def load_signals(self):
         """
@@ -43,6 +43,7 @@ class DataFrameManager:
                 'sig': sig,
                 'fs': samplerate,   # selbst hinzugefügt, benötigt für spätere verarbeitung
                 'spec': metadata.get('spec'),
+                'pos': metadata.get('pos'),
                 'mID': metadata.get('mID'),
                 'time': metadata.get('time'),
                 'rID': metadata.get('rID'),
@@ -62,6 +63,7 @@ class DataFrameManager:
         - 'fn': Dateiname
         - 'fs': Samplerate
         - 'spec': Z01 oder Z05 (Probe)
+        - 'pos': Position (z.B. Pos00)
         - 'mID': Messungs-ID
         - 'time': Zeitstempel
         - 'rID': Aufnahme-ID
@@ -78,6 +80,7 @@ class DataFrameManager:
             
         metadata = {
             'spec': parts[0],      # Z01 oder Z05
+            'pos': parts[1],       # Pos01
             'mID': parts[4],       # 0000 (Messungs-ID)
             'time': parts[5],      # 1307031436 (Zeitstempel)
             'rID': parts[6],       # 00000 (Aufnahme-ID)
