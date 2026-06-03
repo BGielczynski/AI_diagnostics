@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from stft_processor import calculate_stft
 
 KONTRASTFAKTOR = 1
 
