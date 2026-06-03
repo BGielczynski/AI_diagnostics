@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from stft_processor import calculate_stft
 
-KONTRASTFAKTOR = 1.7
+KONTRASTFAKTOR = 1
 
 def plot_dual_spectrograms(df,f,t):
     """
