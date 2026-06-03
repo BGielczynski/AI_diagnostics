@@ -5,7 +5,4 @@ __pycache__/
 .venv/
 .vscode/
 *.log
-*.pdf
-*.png
-!Task_1/AS1.png
-!Task_1/Seminaraufgabe-1.pdf
+
