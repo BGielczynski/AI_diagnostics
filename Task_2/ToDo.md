@@ -8,6 +8,7 @@
             - [ ] Dynamische Merkmale 1. und 2. Ordnung ?
         - [ ] Langrange Interpolation ?
 - [x] Scatter-Plots
+    - [ ] Dimensionsreduktion (Weglassen von Dimensionen) ?
     - [ ] Mittelwert aus Z01 und Z04
     - [ ] Auswahl einer mID bei Z01 und Z04
 - [ ] Präsentation bearbeiten
