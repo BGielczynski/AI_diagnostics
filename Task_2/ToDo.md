@@ -4,6 +4,9 @@
     - [x] Prüfen welche Variante und festlegen (func "mean")
         - [ ] Kovarianz ?
         - [ ] Komponentenmittelwert ?
+        - [ ] Gaußsche Mischverteilungsdichte ? 
+            - [ ] Dynamische Merkmale 1. und 2. Ordnung ?
+        - [ ] Langrange Interpolation ?
 - [x] Scatter-Plots
     - [ ] Mittelwert aus Z01 und Z04
     - [ ] Auswahl einer mID bei Z01 und Z04
@@ -11,5 +14,5 @@
     - [x] Einleitung
     - [ ] Merkmale
     - [ ] PCA
-    - [ ] scatter-plots
+    - [ ] Scatter-Plots
     - [ ] Zusammenfassung
