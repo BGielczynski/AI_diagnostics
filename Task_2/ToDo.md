@@ -2,18 +2,18 @@
 - [x] Merkmalanalyse
 - [x] PCA durchführen
     - [x] Prüfen welche Variante und festlegen (func "mean")
-        - [ ] Kovarianz ?
-        - [ ] Komponentenmittelwert ?
-        - [ ] Gaußsche Mischverteilungsdichte ? 
-            - [ ] Dynamische Merkmale 1. und 2. Ordnung ?
-        - [ ] Langrange Interpolation ?
+        - [x] Kovarianz ? Nein
+        - [x] Komponentenmittelwert ? Nein
+        - [x] Gaußsche Mischverteilungsdichte ? Nein 
+            - [x] Dynamische Merkmale 1. und 2. Ordnung
+        - [x] Langrange Interpolation ? Nein
 - [x] Scatter-Plots
-    - [ ] Dimensionsreduktion (Weglassen von Dimensionen) ?
-    - [ ] Mittelwert aus Z01 und Z04
-    - [ ] Auswahl einer mID bei Z01 und Z04
-- [ ] Präsentation bearbeiten
+    - [x] Dimensionsreduktion (Weglassen von Dimensionen) ?
+    - [x] Mittelwert aus Z01 und Z04
+    - [x] Auswahl einer mID bei Z01 und Z04
+- [x] Präsentation bearbeiten
     - [x] Einleitung
-    - [ ] Merkmale
-    - [ ] PCA
-    - [ ] Scatter-Plots
-    - [ ] Zusammenfassung
+    - [x] Merkmale
+    - [x] PCA
+    - [x] Scatter-Plots
+    - [x] Zusammenfassung
