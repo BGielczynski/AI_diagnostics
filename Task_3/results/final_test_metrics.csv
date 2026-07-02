@@ -1,0 +1,2 @@
+accuracy,balanced_accuracy,precision_damaged_0,recall_damaged_0,f1_damaged_0,precision_good_1,recall_good_1,f1_good_1,roc_auc_damaged_0
+1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0

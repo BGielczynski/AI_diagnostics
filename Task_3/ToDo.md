@@ -27,23 +27,23 @@
     - [x] `results/features_per_file.csv`
     - [x] `results/features_aggregated_mid.csv`
     - [x] `results/features_split.csv`
-- [ ] MLP-Klassifikator erstellen
-    - [ ] `StandardScaler`
-    - [ ] `MLPClassifier`
-    - [ ] Kleine Netze testen, z. B. `(16,)`, `(32,)`, `(64,)`
-- [ ] Hyperparameter mit Entwicklungssatz optimieren
-    - [ ] Batchgroesse testen
-    - [ ] Lernrate testen
-    - [ ] Anzahl Neuronen testen
-    - [ ] Regularisierung `alpha` testen
-- [ ] Finales Modell auf Testsatz bewerten
-    - [ ] Accuracy
-    - [ ] Balanced Accuracy
-    - [ ] Precision, Recall, F1
-    - [ ] Confusion Matrix
-- [ ] ROC-Kurve und AUC erstellen
-    - [ ] ROC-Plot speichern
-    - [ ] AUC-Wert berechnen
+- [x] MLP-Klassifikator erstellen
+    - [x] `StandardScaler`
+    - [x] `MLPClassifier`
+    - [x] Kleine Netze testen, z. B. `(16,)`, `(32,)`, `(64,)`
+- [x] Hyperparameter mit Entwicklungssatz optimieren
+    - [x] Batchgroesse testen
+    - [x] Lernrate testen
+    - [x] Anzahl Neuronen testen
+    - [x] Regularisierung `alpha` testen
+- [x] Finales Modell auf Testsatz bewerten
+    - [x] Accuracy
+    - [x] Balanced Accuracy
+    - [x] Precision, Recall, F1
+    - [x] Confusion Matrix
+- [x] ROC-Kurve und AUC erstellen
+    - [x] ROC-Plot speichern
+    - [x] AUC-Wert berechnen
     - [ ] Diagramm diskutieren
 - [ ] Praesentation vorbereiten
     - [ ] Datensatz und Label-Zuordnung erklaeren
