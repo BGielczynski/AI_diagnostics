@@ -5,4 +5,4 @@ __pycache__/
 .venv/
 .vscode/
 *.log
-
+Task_3/.numba_cache/

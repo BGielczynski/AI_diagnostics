@@ -1,0 +1,54 @@
+- [x] DataFrame aus Task 2 uebernehmen und fuer Task 3 anpassen
+    - [x] Pfad zur Datei speichern
+    - [x] Label hinzufuegen: Z01-Z04 = 1 (gut), Z05 = 0 (beschaedigt)
+- [x] Signale aus `Task_2/data/sig` laden
+- [x] Merkmale extrahieren
+    - [x] Gleiche Merkmale wie in Task 2 verwenden
+    - [x] MFCC
+    - [x] Spektralzentrum, Bandbreite, Roll-off
+    - [x] Spektralkontrast
+    - [x] Chroma-STFT und Chroma-CENS
+    - [x] Zero-Crossing-Rate
+    - [x] RMS-Energie
+    - [x] Delta-MFCC
+- [x] mID-Mittelung durchfuehren
+    - [x] Mittelwert ueber `mID`
+    - [x] `spec`, `pos`, `rID` und `sID` getrennt lassen
+    - [x] Ziel: gleiche Datenanzahl pro Zahnrad und Channel
+- [x] Channel als Feature aufnehmen
+    - [x] `sID_Ch1`
+    - [x] `sID_Ch2`
+- [x] Trainings-, Entwicklungs- und Testsatz erstellen
+    - [x] Gruppierter Split nach `spec + pos + rID`
+    - [x] Ch1 und Ch2 derselben Messung im selben Split lassen
+    - [x] 60% Training, 20% Entwicklung, 20% Test
+    - [x] Ergebnis: pro Zahnrad und Channel 12 / 4 / 4 Datenpunkte
+- [x] Zwischenergebnisse speichern
+    - [x] `results/features_per_file.csv`
+    - [x] `results/features_aggregated_mid.csv`
+    - [x] `results/features_split.csv`
+- [ ] MLP-Klassifikator erstellen
+    - [ ] `StandardScaler`
+    - [ ] `MLPClassifier`
+    - [ ] Kleine Netze testen, z. B. `(16,)`, `(32,)`, `(64,)`
+- [ ] Hyperparameter mit Entwicklungssatz optimieren
+    - [ ] Batchgroesse testen
+    - [ ] Lernrate testen
+    - [ ] Anzahl Neuronen testen
+    - [ ] Regularisierung `alpha` testen
+- [ ] Finales Modell auf Testsatz bewerten
+    - [ ] Accuracy
+    - [ ] Balanced Accuracy
+    - [ ] Precision, Recall, F1
+    - [ ] Confusion Matrix
+- [ ] ROC-Kurve und AUC erstellen
+    - [ ] ROC-Plot speichern
+    - [ ] AUC-Wert berechnen
+    - [ ] Diagramm diskutieren
+- [ ] Praesentation vorbereiten
+    - [ ] Datensatz und Label-Zuordnung erklaeren
+    - [ ] mID-Mittelung begruenden
+    - [ ] Split-Strategie erklaeren
+    - [ ] MLP und Hyperparameter vorstellen
+    - [ ] Testergebnisse zeigen
+    - [ ] Grenzen diskutieren: wenige beschaedigte Proben, nur Z05 als Klasse 0
