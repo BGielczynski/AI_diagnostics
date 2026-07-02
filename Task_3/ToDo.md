@@ -52,4 +52,6 @@
     - [ ] MLP und Hyperparameter vorstellen
     - [ ] Testergebnisse zeigen
     - [ ] Grenzen diskutieren: wenige beschaedigte Proben, nur Z05 als Klasse 0
+
+# Important because atm 1.0 accuracy!
 - [ ] extraktion und oder standatisierung und PCA von den splits trennen.
