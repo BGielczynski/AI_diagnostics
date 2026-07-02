@@ -52,3 +52,4 @@
     - [ ] MLP und Hyperparameter vorstellen
     - [ ] Testergebnisse zeigen
     - [ ] Grenzen diskutieren: wenige beschaedigte Proben, nur Z05 als Klasse 0
+- [ ] extraktion und oder standatisierung und PCA von den splits trennen.
