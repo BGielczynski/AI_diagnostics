@@ -1,57 +1,45 @@
 - [x] DataFrame aus Task 2 uebernehmen und fuer Task 3 anpassen
     - [x] Pfad zur Datei speichern
     - [x] Label hinzufuegen: Z01-Z04 = 1 (gut), Z05 = 0 (beschaedigt)
+    - [x] Channel aus Dateiname speichern
 - [x] Signale aus `Task_2/data/sig` laden
-- [x] Merkmale extrahieren
-    - [x] Gleiche Merkmale wie in Task 2 verwenden
-    - [x] MFCC
+- [x] Fester Positionssplit auf Rohdateien
+    - [x] `Pos03` und `Pos05` = Entwicklungssatz
+    - [x] `Pos07` und `Pos09` = Testsatz
+    - [x] alle anderen Positionen = Training
+    - [x] Ergebnis pro Channel: Z01 60/20/20, Z04 36/12/12, Z02/Z03/Z05 12/4/4
+- [x] Merkmale nach Split-Zuordnung extrahieren
+    - [x] MFCC und Delta-MFCC
     - [x] Spektralzentrum, Bandbreite, Roll-off
     - [x] Spektralkontrast
     - [x] Chroma-STFT und Chroma-CENS
     - [x] Zero-Crossing-Rate
     - [x] RMS-Energie
-    - [x] Delta-MFCC
-- [x] mID-Mittelung durchfuehren
-    - [x] Mittelwert ueber `mID`
-    - [x] `spec`, `pos`, `rID` und `sID` getrennt lassen
-    - [x] Ziel: gleiche Datenanzahl pro Zahnrad und Channel
-- [x] Channel als Feature aufnehmen
-    - [x] `sID_Ch1`
-    - [x] `sID_Ch2`
-- [x] Trainings-, Entwicklungs- und Testsatz erstellen
-    - [x] Gruppierter Split nach `spec + pos + rID`
-    - [x] Ch1 und Ch2 derselben Messung im selben Split lassen
-    - [x] 60% Training, 20% Entwicklung, 20% Test
-    - [x] Ergebnis: pro Zahnrad und Channel 12 / 4 / 4 Datenpunkte
-- [x] Zwischenergebnisse speichern
-    - [x] `results/features_per_file.csv`
-    - [x] `results/features_aggregated_mid.csv`
+- [x] Merkmale ueber `mID` mitteln
+    - [x] Gruppierung nach `spec`, `pos`, `rID`, `sID`, `label`, `split`
+    - [x] Mittelwert der Featurewerte bilden
+    - [x] `mID_count` und `source_file_count` nur als Metadaten speichern, nicht als Feature verwenden
+- [x] Zwei getrennte MLP-Modelle trainieren
+    - [x] ein Modell fuer `Ch1`
+    - [x] ein Modell fuer `Ch2`
+    - [x] `StandardScaler -> MLPClassifier`
+    - [x] Hyperparameter mit Entwicklungssatz optimieren
+- [x] Testsignale per Channel routen
+    - [x] `Ch1`-Signal nutzt `Ch1`-Modell
+    - [x] `Ch2`-Signal nutzt `Ch2`-Modell
+- [x] Ergebnisse speichern
+    - [x] `results/raw_signal_split.csv`
     - [x] `results/features_split.csv`
-- [x] MLP-Klassifikator erstellen
-    - [x] `StandardScaler`
-    - [x] `MLPClassifier`
-    - [x] Kleine Netze testen, z. B. `(16,)`, `(32,)`, `(64,)`
-- [x] Hyperparameter mit Entwicklungssatz optimieren
-    - [x] Batchgroesse testen
-    - [x] Lernrate testen
-    - [x] Anzahl Neuronen testen
-    - [x] Regularisierung `alpha` testen
-- [x] Finales Modell auf Testsatz bewerten
-    - [x] Accuracy
-    - [x] Balanced Accuracy
-    - [x] Precision, Recall, F1
-    - [x] Confusion Matrix
-- [x] ROC-Kurve und AUC erstellen
-    - [x] ROC-Plot speichern
-    - [x] AUC-Wert berechnen
-    - [ ] Diagramm diskutieren
-- [ ] Praesentation vorbereiten
-    - [ ] Datensatz und Label-Zuordnung erklaeren
-    - [ ] mID-Mittelung begruenden
-    - [ ] Split-Strategie erklaeren
-    - [ ] MLP und Hyperparameter vorstellen
-    - [ ] Testergebnisse zeigen
-    - [ ] Grenzen diskutieren: wenige beschaedigte Proben, nur Z05 als Klasse 0
-
-# Important because atm 1.0 accuracy!
-- [ ] extraktion und oder standatisierung und PCA von den splits trennen.
+    - [x] `results/final_test_metrics.csv`
+    - [x] `results/routed_channel_test_predictions.csv`
+    - [x] `results/model_Ch1/*`
+    - [x] `results/model_Ch2/*`
+- [x] Zusatzdiagnostik aus Week 11
+    - [x] Specificity, NPV und MCC
+    - [x] Learning Curve pro Channel
+    - [x] Decision-Boundary-GIF pro Channel mit linearer Grenze in PCA-Projektion
+- [ ] Praesentation aktualisieren
+    - [ ] festen Positionssplit erklaeren
+    - [ ] Feature-Mittelung ueber `mID` erklaeren
+    - [ ] zwei Channel-Modelle und Routing erklaeren
+    - [ ] perfekte Ergebnisse kritisch diskutieren: nur Z05 als beschaedigte Klasse

@@ -4,7 +4,7 @@
 
 Wir zeigen, wie aus den Rohsignalen ein fairer Datensatz entsteht, wie daraus Merkmale extrahiert werden, wie das MLP trainiert und optimiert wird und wie die Ergebnisse kritisch zu bewerten sind.
 
-Wichtig fuer die Code-Vorstellung: Alles, was aus Aufgabe 1 und 2 bekannt ist, nur kurz einordnen. Ausfuehrlicher zeigen wir den neuen Code aus Aufgabe 3: Aggregation, Split, MLP-Training, Hyperparameter-Suche, Evaluation und GIF-Erzeugung.
+Wichtig fuer die Code-Vorstellung: Alles, was aus Aufgabe 1 und 2 bekannt ist, nur kurz einordnen. Ausfuehrlicher zeigen wir den neuen Code aus Aufgabe 3: Feature-Mittelung ueber `mID`, fester Positionssplit, zwei getrennte Channel-Modelle, Hyperparameter-Suche, Evaluation, Learning Curves und GIF-Erzeugung.
 
 ## Folie 1: Ziel der Aufgabe
 
@@ -53,7 +53,7 @@ Die Label-Zuordnung basiert auf den Ergebnissen aus Aufgabe 2. Dort wurde `Z05` 
 
 **Notizen:**
 
-Ein direktes Training auf allen Dateien waere problematisch. `Z01` und `Z04` besitzen mehr Wiederholungsmessungen als `Z02`, `Z03` und `Z05`. Wenn wir jede Datei als unabhaengigen Datenpunkt verwenden, bekommen diese Proben mehr Gewicht. Deshalb mitteln wir die Merkmale ueber `mID`. Bei Zahnraedern mit nur einer `mID` veraendert sich dadurch nichts.
+Ein direktes Training auf allen Dateien waere problematisch. `Z01` und `Z04` besitzen mehr Wiederholungsmessungen als `Z02`, `Z03` und `Z05`. Wenn wir jede Datei als unabhaengigen Datenpunkt verwenden, bekommen diese Proben mehr Gewicht. Deshalb extrahieren wir zuerst die Merkmale pro Datei und mitteln danach die Featurewerte ueber alle `mID` derselben Messsituation.
 
 ## Folie 4: Pipeline vom Signal zum Datensatz
 
@@ -64,15 +64,17 @@ Ein direktes Training auf allen Dateien waere problematisch. `Z01` und `Z04` bes
 ```text
 WAV-Dateien
 -> DataFrame mit Metadaten
+-> fester Positionssplit
 -> Merkmalsextraktion
--> mID-Mittelung
--> Channel-One-Hot
--> Train / Dev / Test
+-> Feature-Mittelung ueber mID
+-> Ch1-/Ch2-Datensatz
+-> je ein MLP pro Channel
+-> Test-Routing nach Channel
 ```
 
 **Notizen:**
 
-Die Verarbeitung ist in mehrere Module aufgeteilt. `dataframe_manager.py` laedt Signale und Metadaten. `extraction.py` berechnet die Merkmale. `aggregation.py` mittelt ueber die Messungs-ID. Danach wird der Channel als Zusatzinformation aufgenommen. Anschliessend erzeugt `split.py` die Trainings-, Entwicklungs- und Testdaten.
+Die Verarbeitung ist in mehrere Module aufgeteilt. `dataframe_manager.py` laedt Signale und Metadaten. Danach ordnet `split.py` jede Rohdatei anhand der Position fest Train, Entwicklung oder Test zu. `extraction.py` berechnet die Merkmale pro Datei. In `main.py` werden diese Merkmale anschliessend ueber alle `mID` derselben Messsituation gemittelt.
 
 ## Folie 5: Merkmalsextraktion
 
@@ -91,26 +93,25 @@ Die Verarbeitung ist in mehrere Module aufgeteilt. `dataframe_manager.py` laedt 
 
 Wir verwenden bewusst die Merkmale aus Aufgabe 2 weiter, weil diese bereits zu guten visuellen Trennungen gefuehrt haben. Die Merkmale beschreiben sowohl zeitliche Eigenschaften als auch spektrale Eigenschaften des Signals. Dadurch muss das MLP nicht direkt auf den Rohsignalen lernen, sondern bekommt kompakte Signalbeschreibungen.
 
-## Folie 6: mID-Mittelung und Channel-Behandlung
+## Folie 6: Positionssplit und Channel-Behandlung
 
 **Bild:** keins oder kleine Tabelle
 
 **Text auf der Folie:**
 
-- Mittelung ueber:
-    - `mID`
-- Getrennt bleiben:
-    - `spec`
-    - `pos`
-    - `rID`
-    - `sID`
-- Channel als Feature:
-    - `sID_Ch1`
-    - `sID_Ch2`
+- Feature-Mittelung ueber `mID`
+- Merkmalsextraktion pro Datei vor der Mittelung
+- Fester Split ueber Position:
+    - Dev: `Pos03`, `Pos05`
+    - Test: `Pos07`, `Pos09`
+    - Train: alle anderen Positionen
+- Zwei Modelle:
+    - `Ch1`
+    - `Ch2`
 
 **Notizen:**
 
-Wir mitteln nicht die Rohsignale, sondern die extrahierten Merkmale. Dadurch entstehen stabilere Werte und eine ausgeglichenere Datenbasis. `Ch1` und `Ch2` bleiben getrennte Datenpunkte, weil ein einzelner Channel spaeter auch einzeln bewertet werden koennen soll. Damit das Modell trotzdem weiss, welcher Channel vorliegt, geben wir `sID` als One-Hot-Feature mit.
+Wir extrahieren die Merkmale pro Rohdatei und mitteln danach die Featurewerte ueber alle `mID`. Dadurch werden Wiederholungsmessungen in der Merkmalsebene zusammengefasst. Der Split wird vorher ueber feste Positionen definiert, sodass keine gemittelte Gruppe Daten aus verschiedenen Splits mischt. `Ch1` und `Ch2` werden nicht als Feature codiert, sondern bekommen je ein eigenes Modell.
 
 ## Folie 7: Train-, Dev- und Testsplit
 
@@ -119,13 +120,14 @@ Wir mitteln nicht die Rohsignale, sondern die extrahierten Merkmale. Dadurch ent
 **Text auf der Folie:**
 
 - Split-Verhaeltnis: 60 / 20 / 20
-- Gruppierter Split nach:
+- Fester Split nach Position:
 
 ```text
-spec + pos + rID
+Dev:  Pos03, Pos05
+Test: Pos07, Pos09
+Train: Rest
 ```
 
-- Ch1 und Ch2 derselben Messung bleiben zusammen
 - Ergebnis pro Zahnrad und Channel:
     - 12 Training
     - 4 Entwicklung
@@ -133,7 +135,7 @@ spec + pos + rID
 
 **Notizen:**
 
-Der Split ist ein wichtiger methodischer Punkt. Wir splitten nicht zufaellig einzelne Dateien, weil sonst Ch1 und Ch2 derselben Messung in unterschiedlichen Mengen landen koennten. Das waere Datenleckage. Stattdessen bleiben zusammengehoerige Messsituationen im selben Split. Der Entwicklungssatz wird nur fuer die Hyperparameter-Auswahl verwendet, der Testsatz erst ganz am Ende.
+Der Split ist ein wichtiger methodischer Punkt. Wir verwenden feste Positionen: `Pos03` und `Pos05` fuer den Entwicklungssatz, `Pos07` und `Pos09` fuer den Testsatz und alle anderen Positionen fuer das Training. Dadurch ist der Split reproduzierbar und positionsbezogene Messungen werden nicht zufaellig verteilt.
 
 ## Folie 8: MLP-Modell
 
@@ -141,19 +143,19 @@ Der Split ist ein wichtiger methodischer Punkt. Wir splitten nicht zufaellig ein
 
 **Text auf der Folie:**
 
-- Pipeline:
+- Pipeline je Channel:
 
 ```text
 StandardScaler -> MLPClassifier
 ```
 
 - Skalierung nur auf Training fitten
-- Finale Features: Signalmerkmale + Channel-One-Hot
+- Finale Features: nur Signalmerkmale des jeweiligen Channels
 - Kleine Netze wegen kleinem Datensatz
 
 **Notizen:**
 
-Vor dem MLP werden alle Features standardisiert. Das ist wichtig, weil die Merkmale unterschiedliche Wertebereiche besitzen. Das finale Modell ist bewusst klein gehalten, da der Datensatz nach der Aggregation nur 200 Datenpunkte enthaelt. Ein zu grosses Netz koennte leicht auswendig lernen.
+Vor dem MLP werden alle Features standardisiert. Das ist wichtig, weil die Merkmale unterschiedliche Wertebereiche besitzen. Pro Channel trainieren wir ein eigenes kleines Modell, da der Datensatz trotz Rohdateien klein bleibt. Ein zu grosses Netz koennte leicht auswendig lernen.
 
 ## Folie 9: Hyperparameter-Suche
 
@@ -187,10 +189,8 @@ Die Hyperparameter werden nicht auf dem Testsatz ausgewaehlt. Fuer jede Kombinat
 **Text auf der Folie:**
 
 - Neu in Task 3:
-    - `aggregation.py`
     - `split.py`
     - `model.py`
-    - `create_training_gif.py`
 - Angepasst:
     - `main.py`
     - `dataframe_manager.py`
@@ -198,24 +198,26 @@ Die Hyperparameter werden nicht auf dem Testsatz ausgewaehlt. Fuer jede Kombinat
 
 **Notizen:**
 
-Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau aus Aufgabe 1 und 2 erklaeren. Neu und wichtig sind vor allem die mID-Mittelung in `aggregation.py`, der gruppierte Split in `split.py`, die komplette MLP-Logik in `model.py` und die GIF-Erzeugung in `create_training_gif.py`. `main.py` verbindet alle Schritte zu einer Pipeline.
+Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau aus Aufgabe 1 und 2 erklaeren. Neu und wichtig sind vor allem die Feature-Mittelung und Channel-Routing-Pipeline in `main.py`, der feste Positionssplit in `split.py` und die komplette MLP- und Plot-Logik in `model.py`.
 
-## Folie 11: Code-Ausschnitt Aggregation und Split
+## Folie 11: Code-Ausschnitt Split und Routing
 
-**Bild:** optional Code-Screenshot aus `aggregation.py` und `split.py`
+**Bild:** optional Code-Screenshot aus `split.py` und `main.py`
 
 **Text auf der Folie:**
 
-- `aggregation.py`
-    - Mittelwert ueber `mID`
-    - `spec`, `pos`, `rID`, `sID` bleiben getrennt
 - `split.py`
-    - gruppiert nach `spec + pos + rID`
-    - verhindert Channel-Leakage
+    - `Pos03`, `Pos05` -> Dev
+    - `Pos07`, `Pos09` -> Test
+    - Rest -> Train
+-- `main.py`
+    - mittelt Featurewerte ueber `mID`
+    - trainiert je ein Modell fuer `Ch1` und `Ch2`
+    - routet Testsignale nach `sID`
 
 **Notizen:**
 
-Hier zeigen wir konkret, warum die Datenbasis fairer wird. In `aggregation.py` werden die extrahierten Merkmale gemittelt, nicht die Rohsignale. In `split.py` wird verhindert, dass Ch1 und Ch2 derselben Messsituation getrennt in Training und Test landen. Das ist ein wichtiger fachlicher Punkt und sollte im Code kurz gezeigt werden.
+Hier zeigen wir konkret, wie die Datenbasis entsteht. Der Split ist nicht zufaellig, sondern folgt festen Positionen. Danach werden pro Datei Merkmale extrahiert und in `main.py` ueber `mID` gemittelt. Anschliessend werden fuer `Ch1` und `Ch2` getrennte Modelle trainiert und jedes Testsignal anhand von `sID` an das passende Modell gegeben.
 
 ## Folie 12: Code-Ausschnitt MLP und Evaluation
 
@@ -236,52 +238,50 @@ Hier zeigen wir konkret, warum die Datenbasis fairer wird. In `aggregation.py` w
 
 `model.py` ist der wichtigste neue Code fuer Aufgabe 3. Dort wird festgelegt, welche Spalten als Features ins Modell gehen, wie die Pipeline gebaut wird, wie Hyperparameter getestet werden und welche Ergebnisse gespeichert werden. Wichtig ist: Der Testsatz wird nicht zur Auswahl der Hyperparameter verwendet.
 
-## Folie 13: Training pro Iteration
+## Folie 13: Learning Curves
 
-**Bild:** `results/training_iteration_demo.gif`
-
-**Text auf der Folie:**
-
-- Loss sinkt waehrend des Trainings
-- Pro Iteration:
-    - Vorhersage
-    - Fehlerberechnung
-    - Gewichtsupdate
-- Training endet nach Konvergenz
-
-**Notizen:**
-
-Das GIF zeigt die echte Loss-Kurve des besten MLP. In jeder Iteration macht das Modell Vorhersagen, berechnet den Fehler und passt seine Gewichte per Backpropagation an. Der sinkende Loss zeigt, dass das Modell die Trainingsdaten zunehmend besser beschreibt.
-
-## Folie 14: Training- und Entwicklungs-Accuracy
-
-**Bild:** `results/accuracy_curve_train_dev.png`
+**Bild:** `results/model_Ch1/learning_curve.png` und `results/model_Ch2/learning_curve.png`
 
 **Text auf der Folie:**
 
-- Training Accuracy und Dev Accuracy pro Iteration
-- Beide Kurven steigen auf `1.00`
-- Kein sichtbares Overfitting im aktuellen Split
-- Dev-Satz dient zur Hyperparameter-Auswahl
+- Train- und Dev-Score pro Trainingsmenge
+- Kurven zeigen Datenbedarf des Modells
+- Bereits kleine Trainingsmenge trennt fast perfekt
+- Ab ca. 40% Trainingsdaten perfekte Dev-Werte
 
 **Notizen:**
 
-Dieser Plot zeigt, ob das Modell nur die Trainingsdaten besser lernt oder auch auf dem Entwicklungssatz besser wird. Wenn Training steigt und Dev faellt, waere das ein Hinweis auf Overfitting. Hier steigen beide Kurven bis auf 1.0. Das spricht fuer eine klare Trennung im aktuellen Feature-Raum, muss aber wegen der kleinen Datenbasis weiter kritisch eingeordnet werden.
+Die Learning Curves zeigen, wie gut das Modell mit wachsender Trainingsmenge wird. Bei 20 Prozent Trainingsdaten ist der Entwicklungssatz noch nicht ganz perfekt. Ab 40 Prozent Trainingsdaten erreichen beide Channel-Modelle im aktuellen Split perfekte Entwicklungswerte.
+
+## Folie 14: Metriken je Channel
+
+**Bild:** Tabellen aus `results/model_Ch1/final_test_metrics.csv` und `results/model_Ch2/final_test_metrics.csv`
+
+**Text auf der Folie:**
+
+- Ch1 und Ch2 separat bewertet
+- Accuracy, Balanced Accuracy, F1
+- Specificity, NPV, MCC
+- Beide Channel erreichen aktuell `1.00`
+
+**Notizen:**
+
+Die Channel werden separat trainiert und bewertet. Neben Accuracy verwenden wir auch robustere Kennzahlen wie Balanced Accuracy und MCC. Die perfekten Werte muessen dennoch vorsichtig interpretiert werden, weil nur `Z05` die beschaedigte Klasse bildet.
 
 ## Folie 15: Entscheidungsgrenze im Training
 
-**Bild:** `results/training_decision_boundary.gif`
+**Bild:** `results/model_Ch1/training_decision_boundary.gif` und `results/model_Ch2/training_decision_boundary.gif`
 
 **Text auf der Folie:**
 
 - Punkte: Trainingsdaten in 2D-PCA-Projektion
-- Linie: Entscheidungsgrenze des MLP
+- Linie: lineare Entscheidungsgrenze in der PCA-Ebene
 - Rot: beschaedigt `0`
 - Blau: gut `1`
 
 **Notizen:**
 
-Diese Darstellung ist eine Visualisierung. Die Punkte sind auf zwei PCA-Achsen reduziert, damit wir sie anzeigen koennen. Die Entscheidungsgrenze stammt aber vom MLP im vollstaendigen Merkmalsraum und wird in die PCA-Ebene projiziert. Deshalb ist die Grafik gut zur Erklaerung des Lernprozesses, aber nicht der eigentliche Trainingsraum.
+Diese Darstellung ist eine Visualisierung. Die Punkte sind auf zwei PCA-Achsen reduziert, damit wir sie anzeigen koennen. Die eingezeichnete Trennlinie ist bewusst linear und zeigt die Trennung in dieser 2D-Projektion. Das eigentliche MLP arbeitet weiterhin im vollstaendigen Merkmalsraum.
 
 ## Folie 16: Testergebnisse
 
@@ -337,12 +337,13 @@ Der wichtigste Diskussionsteil ist die Einordnung. Das Modell kann die vorhanden
 
 **Text auf der Folie:**
 
-- Saubere Pipeline von Rohsignal zu MLP
-- Faire Datenbasis durch mID-Mittelung
-- Gruppierter Split gegen Datenleckage
-- MLP erreicht perfekte Testwerte im aktuellen Datensatz
+- Saubere Pipeline von gemittelten Merkmalen zu zwei Channel-MLPs
+- Fester Positionssplit statt zufaelligem Dateisplit
+- Testsignale werden nach Channel geroutet
+- Beide MLPs erreichen perfekte Testwerte im aktuellen Datensatz
 - Naechster Schritt: mehr beschaedigte Proben testen
 
 **Notizen:**
 
-Zusammenfassend haben wir eine vollstaendige Klassifikationspipeline aufgebaut. Die wichtigsten methodischen Entscheidungen waren die Aggregation ueber mID und der gruppierte Split. Das Ergebnis ist sehr gut, muss aber wegen der begrenzten Datenbasis kritisch diskutiert werden. Fuer eine robustere Aussage waeren weitere beschaedigte Zahnraeder notwendig.
+Zusammenfassend haben wir eine vollstaendige Klassifikationspipeline aufgebaut. Die wichtigsten methodischen Entscheidungen waren die Feature-Mittelung ueber `mID`, der feste Positionssplit und zwei getrennte Modelle fuer `Ch1` und `Ch2`. Das Ergebnis ist sehr gut, muss aber wegen der begrenzten Datenbasis kritisch diskutiert werden. Fuer eine robustere Aussage waeren weitere beschaedigte Zahnraeder notwendig.
+
