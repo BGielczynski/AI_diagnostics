@@ -189,64 +189,23 @@ alpha = 0.0001
 
 Die Hyperparameter werden nicht auf dem Testsatz ausgewaehlt. Fuer jede Kombination trainieren wir auf dem Trainingssatz und bewerten auf dem Entwicklungssatz. Das beste Modell wird anhand der Entwicklungsmetriken ausgewaehlt. Danach wird das finale Modell mit Training plus Entwicklung neu trainiert und erst dann auf dem Testsatz bewertet.
 
-## Folie 10: Neuer Code in Aufgabe 3
+## Folie 10: Code-Ueberblick
 
-**Bild:** optional Screenshot der Projektstruktur `Task_3/src`
-
-**Text auf der Folie:**
-
-- Neu in Task 3:
-    - `split.py`
-    - `model.py`
-- Angepasst:
-    - `main.py`
-    - `dataframe_manager.py`
-    - `extraction.py`
-
-**Notizen:**
-
-Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau aus Aufgabe 1 und 2 erklaeren. Neu und wichtig sind vor allem die Feature-Mittelung und Channel-Routing-Pipeline in `main.py`, der zahnradbasierte Split in `split.py` und die komplette MLP- und Plot-Logik in `model.py`.
-
-## Folie 11: Code-Ausschnitt Split und Routing
-
-**Bild:** optional Code-Screenshot aus `split.py` und `main.py`
+**Bild:** keins
 
 **Text auf der Folie:**
 
-- `split.py`
-    - `Z01`, `Z02` -> Train
-    - `Z04` -> Dev
-    - `Z03` -> Test
-    - `Z05` -> positionsbasiert 12/4/4
--- `main.py`
-    - mittelt Featurewerte ueber `mID`
-    - trainiert je ein Modell fuer `Ch1` und `Ch2`
-    - routet Testsignale nach `sID`
+- `main.py`: steuert die komplette Pipeline
+- `dataframe_manager.py`: laedt WAV-Dateien und Metadaten
+- `split.py`: ordnet Rohsignale Train, Dev und Test zu
+- `extraction.py`: berechnet Signalmerkmale pro Datei
+- `model.py`: trainiert, optimiert und bewertet die MLP-Modelle
 
 **Notizen:**
 
-Hier zeigen wir konkret, wie die Datenbasis entsteht. Der Split ist nicht zufaellig, sondern trennt die guten Zahnraeder nach Identitaet. Nur `Z05` wird positionsbasiert verteilt, damit die beschaedigte Klasse in Train, Dev und Test vertreten ist. Danach werden pro Datei Merkmale extrahiert und in `main.py` ueber `mID` gemittelt. Anschliessend werden fuer `Ch1` und `Ch2` getrennte Modelle trainiert und jedes Testsignal anhand von `sID` an das passende Modell gegeben.
+Die Code-Vorstellung laeuft am besten ueber `main.py`, weil dort alle Schritte sichtbar zusammenlaufen: Signale laden, Split anwenden, Features extrahieren, ueber `mID` mitteln, pro Channel ein Modell trainieren und am Ende Ergebnisse speichern. Die anderen Dateien erklaeren wir kurz nach ihrer Rolle. `dataframe_manager.py` baut den Rohdaten-DataFrame aus den WAV-Dateien. `split.py` enthaelt die methodisch wichtige Aufteilung: `Z01` und `Z02` ins Training, `Z04` in den Entwicklungssatz, `Z03` in den Testsatz und `Z05` positionsbasiert in alle drei Splits. `extraction.py` berechnet die Merkmale wie MFCC, Spektralmerkmale, Chroma, Zero-Crossing-Rate und RMS. `model.py` muss nicht im Detail vorgestellt werden; wichtig ist nur, dass dort `StandardScaler -> MLPClassifier`, Hyperparameter-Suche, finale Evaluation, ROC, Confusion Matrix, Learning Curves und Loss-Kurven umgesetzt sind.
 
-## Folie 12: Code-Ausschnitt MLP und Evaluation
-
-**Bild:** optional Code-Screenshot aus `model.py`
-
-**Text auf der Folie:**
-
-- `StandardScaler -> MLPClassifier`
-- Hyperparameter-Suche auf Entwicklungssatz
-- Finale Bewertung auf Testsatz
-- Ausgabe:
-    - Metriken
-    - Confusion Matrix
-    - ROC/AUC
-    - Loss-Kurve
-
-**Notizen:**
-
-`model.py` ist der wichtigste neue Code fuer Aufgabe 3. Dort wird festgelegt, welche Spalten als Features ins Modell gehen, wie die Pipeline gebaut wird, wie Hyperparameter getestet werden und welche Ergebnisse gespeichert werden. Wichtig ist: Der Testsatz wird nicht zur Auswahl der Hyperparameter verwendet.
-
-## Folie 13: Learning Curves
+## Folie 11: Learning Curves
 
 **Bild:** `results/model_Ch1/learning_curve.png` und `results/model_Ch2/learning_curve.png`
 
@@ -262,7 +221,7 @@ Hier zeigen wir konkret, wie die Datenbasis entsteht. Der Split ist nicht zufael
 
 Die Learning Curves zeigen, wie gut das Modell mit wachsender Trainingsmenge wird. Im aktuellen Split erreicht `Ch1` schon mit kleinen Trainingsmengen perfekte Entwicklungswerte. `Ch2` verbessert sich schrittweise und erreicht die perfekten Entwicklungswerte erst mit der gesamten Trainingsmenge.
 
-## Folie 14: Metriken je Channel
+## Folie 12: Metriken je Channel
 
 **Bild:** Tabellen aus `results/model_Ch1/final_test_metrics.csv` und `results/model_Ch2/final_test_metrics.csv`
 
@@ -277,7 +236,7 @@ Die Learning Curves zeigen, wie gut das Modell mit wachsender Trainingsmenge wir
 
 Die Channel werden separat trainiert und bewertet. Neben Accuracy verwenden wir auch robustere Kennzahlen wie Balanced Accuracy und MCC. Die perfekten Werte muessen dennoch vorsichtig interpretiert werden, weil nur `Z05` die beschaedigte Klasse bildet.
 
-## Folie 15: Entscheidungsgrenze im Training
+## Folie 13: Entscheidungsgrenze im Training
 
 **Bild:** `results/model_Ch1/training_decision_boundary.gif` und `results/model_Ch2/training_decision_boundary.gif`
 
@@ -292,7 +251,7 @@ Die Channel werden separat trainiert und bewertet. Neben Accuracy verwenden wir 
 
 Diese Darstellung ist eine Visualisierung. Die Punkte sind auf zwei PCA-Achsen reduziert, damit wir sie anzeigen koennen. Die eingezeichnete Trennlinie ist bewusst linear und zeigt die Trennung in dieser 2D-Projektion. Das eigentliche MLP arbeitet weiterhin im vollstaendigen Merkmalsraum.
 
-## Folie 16: Testergebnisse
+## Folie 14: Testergebnisse
 
 **Bild:** `results/confusion_matrix_test.png`
 
@@ -309,7 +268,7 @@ Diese Darstellung ist eine Visualisierung. Die Punkte sind auf zwei PCA-Achsen r
 
 Die Confusion Matrix zeigt, dass im aktuellen Testsatz alle Beispiele korrekt klassifiziert wurden. Besonders wichtig ist der Recall fuer Klasse 0, also fuer beschaedigte Signale. Dieser ist hier 1.0. Trotzdem muessen wir das Ergebnis kritisch einordnen, weil der Datensatz klein ist.
 
-## Folie 17: ROC und AUC
+## Folie 15: ROC und AUC
 
 **Bild:** `results/roc_curve_test.png`
 
@@ -323,7 +282,7 @@ Die Confusion Matrix zeigt, dass im aktuellen Testsatz alle Beispiele korrekt kl
 
 Die ROC-Kurve zeigt, wie gut das Modell zwischen beschaedigt und gut trennt, wenn man den Entscheidungsschwellwert veraendert. Eine AUC von 1.0 bedeutet perfekte Trennung im aktuellen Testsatz. Auch hier gilt: Das ist ein starkes Ergebnis, aber wegen der Datenlage vorsichtig zu interpretieren.
 
-## Folie 18: Kritische Diskussion
+## Folie 16: Kritische Diskussion
 
 **Bild:** keins
 
@@ -341,7 +300,7 @@ Die ROC-Kurve zeigt, wie gut das Modell zwischen beschaedigt und gut trennt, wen
 
 Der wichtigste Diskussionsteil ist die Einordnung. Der neue Split prueft die guten Zahnraeder strenger, weil `Z03` im Test nicht im Training vorkommt. Fuer die beschaedigte Klasse bleibt die Aussage begrenzt, weil alle beschaedigten Signale aus `Z05` stammen. Fuer eine robuste Aussage braeuchte man weitere beschaedigte Zahnraeder.
 
-## Folie 19: Fazit
+## Folie 17: Fazit
 
 **Bild:** optional keins
 
