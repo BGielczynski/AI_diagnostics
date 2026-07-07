@@ -116,7 +116,7 @@ Wir extrahieren die Merkmale pro Rohdatei und mitteln danach die Featurewerte ue
 
 ## Folie 7: Train-, Dev- und Testsplit
 
-**Bild:** optional Tabelle aus Konsolenausgabe oder `features_split.csv`
+**Bild:** `docs/Tsk4_DistrDiagramm.png`
 
 **Text auf der Folie:**
 
@@ -128,6 +128,13 @@ Dev:   Z04      + Z05-Positionen Pos03, Pos05
 Test:  Z03      + Z05-Positionen Pos07, Pos09
 ```
 
+- Das Diagramm zeigt die Verteilung nach Channel:
+    - rot = `Ch1`
+    - blau = `Ch2`
+- `Z01` und `Z04` werden wegen vieler Wiederholungen gemittelt:
+    - `Z01`: 100 Rohsignale pro Channel -> 20 Feature-Zeilen
+    - `Z04`: 60 Rohsignale pro Channel -> 20 Feature-Zeilen
+- `Z02`, `Z03` und `Z05` haben bereits 20 Rohsignale pro Channel
 - Ergebnis nach `mID`-Mittelung pro Channel:
     - Train: 52
     - Dev: 24
@@ -135,7 +142,7 @@ Test:  Z03      + Z05-Positionen Pos07, Pos09
 
 **Notizen:**
 
-Der Split ist ein wichtiger methodischer Punkt. Bei den guten Zahnraedern vermeiden wir, dass dieselbe Zahnrad-Identitaet in allen Splits vorkommt: `Z01` und `Z02` liegen im Training, `Z04` im Entwicklungssatz und `Z03` im Testsatz. Fuer die beschaedigte Klasse ist das nicht vollstaendig moeglich, weil nur `Z05` beschaedigt ist. Deshalb wird `Z05` reproduzierbar ueber Positionen verteilt.
+Das Verteilungsdiagramm macht sichtbar, warum wir vor dem Training mitteln. `Z01` und `Z04` haetten sonst deutlich mehr Einfluss als die anderen Zahnraeder, weil dort mehr Wiederholungsmessungen vorhanden sind. Nach der Mittelung stehen fuer jedes gute Zahnrad pro Channel 20 Feature-Zeilen zur Verfuegung. Danach werden die guten Zahnraeder getrennt: `Z01` und `Z02` liegen im Training, `Z04` im Entwicklungssatz und `Z03` im Testsatz. Fuer die beschaedigte Klasse ist eine solche Zahnrad-Trennung nicht moeglich, weil nur `Z05` beschaedigt ist. Deshalb wird `Z05` pro Channel positionsbasiert in 12 Training, 4 Entwicklung und 4 Test aufgeteilt. Daraus entstehen pro Channel 52 Trainings-, 24 Entwicklungs- und 24 Testbeispiele.
 
 ## Folie 8: MLP-Modell
 
