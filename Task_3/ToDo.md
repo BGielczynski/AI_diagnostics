@@ -3,11 +3,12 @@
     - [x] Label hinzufuegen: Z01-Z04 = 1 (gut), Z05 = 0 (beschaedigt)
     - [x] Channel aus Dateiname speichern
 - [x] Signale aus `Task_2/data/sig` laden
-- [x] Fester Positionssplit auf Rohdateien
-    - [x] `Pos03` und `Pos05` = Entwicklungssatz
-    - [x] `Pos07` und `Pos09` = Testsatz
-    - [x] alle anderen Positionen = Training
-    - [x] Ergebnis pro Channel: Z01 60/20/20, Z04 36/12/12, Z02/Z03/Z05 12/4/4
+- [x] Fester Split auf Rohdateien
+    - [x] `Z01` und `Z02` = Training
+    - [x] `Z04` = Entwicklungssatz
+    - [x] `Z03` = Testsatz
+    - [x] `Z05` positionsbasiert verteilen: 12 Training, 4 Entwicklung, 4 Test pro Channel
+    - [x] Ergebnis nach `mID`-Mittelung pro Channel: 52 Training, 24 Entwicklung, 24 Test
 - [x] Merkmale nach Split-Zuordnung extrahieren
     - [x] MFCC und Delta-MFCC
     - [x] Spektralzentrum, Bandbreite, Roll-off
@@ -38,8 +39,8 @@
     - [x] Specificity, NPV und MCC
     - [x] Learning Curve pro Channel
     - [x] Decision-Boundary-GIF pro Channel mit linearer Grenze in PCA-Projektion
-- [ ] Praesentation aktualisieren
-    - [ ] festen Positionssplit erklaeren
-    - [ ] Feature-Mittelung ueber `mID` erklaeren
-    - [ ] zwei Channel-Modelle und Routing erklaeren
-    - [ ] perfekte Ergebnisse kritisch diskutieren: nur Z05 als beschaedigte Klasse
+- [x] Praesentation aktualisieren
+    - [x] festen zahnradbasierten Split erklaeren
+    - [x] Feature-Mittelung ueber `mID` erklaeren
+    - [x] zwei Channel-Modelle und Routing erklaeren
+    - [x] perfekte Ergebnisse kritisch diskutieren: nur Z05 als beschaedigte Klasse

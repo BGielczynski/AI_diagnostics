@@ -4,7 +4,7 @@
 
 Wir zeigen, wie aus den Rohsignalen ein fairer Datensatz entsteht, wie daraus Merkmale extrahiert werden, wie das MLP trainiert und optimiert wird und wie die Ergebnisse kritisch zu bewerten sind.
 
-Wichtig fuer die Code-Vorstellung: Alles, was aus Aufgabe 1 und 2 bekannt ist, nur kurz einordnen. Ausfuehrlicher zeigen wir den neuen Code aus Aufgabe 3: Feature-Mittelung ueber `mID`, fester Positionssplit, zwei getrennte Channel-Modelle, Hyperparameter-Suche, Evaluation, Learning Curves und GIF-Erzeugung.
+Wichtig fuer die Code-Vorstellung: Alles, was aus Aufgabe 1 und 2 bekannt ist, nur kurz einordnen. Ausfuehrlicher zeigen wir den neuen Code aus Aufgabe 3: Feature-Mittelung ueber `mID`, zahnradbasierter Split mit separater Z05-Verteilung, zwei getrennte Channel-Modelle, Hyperparameter-Suche, Evaluation, Learning Curves und GIF-Erzeugung.
 
 ## Folie 1: Ziel der Aufgabe
 
@@ -64,7 +64,7 @@ Ein direktes Training auf allen Dateien waere problematisch. `Z01` und `Z04` bes
 ```text
 WAV-Dateien
 -> DataFrame mit Metadaten
--> fester Positionssplit
+-> zahnradbasierter Split
 -> Merkmalsextraktion
 -> Feature-Mittelung ueber mID
 -> Ch1-/Ch2-Datensatz
@@ -74,7 +74,7 @@ WAV-Dateien
 
 **Notizen:**
 
-Die Verarbeitung ist in mehrere Module aufgeteilt. `dataframe_manager.py` laedt Signale und Metadaten. Danach ordnet `split.py` jede Rohdatei anhand der Position fest Train, Entwicklung oder Test zu. `extraction.py` berechnet die Merkmale pro Datei. In `main.py` werden diese Merkmale anschliessend ueber alle `mID` derselben Messsituation gemittelt.
+Die Verarbeitung ist in mehrere Module aufgeteilt. `dataframe_manager.py` laedt Signale und Metadaten. Danach ordnet `split.py` jede Rohdatei anhand der Zahnrad-ID und bei `Z05` anhand fester Positionen Train, Entwicklung oder Test zu. `extraction.py` berechnet die Merkmale pro Datei. In `main.py` werden diese Merkmale anschliessend ueber alle `mID` derselben Messsituation gemittelt.
 
 ## Folie 5: Merkmalsextraktion
 
@@ -93,7 +93,7 @@ Die Verarbeitung ist in mehrere Module aufgeteilt. `dataframe_manager.py` laedt 
 
 Wir verwenden bewusst die Merkmale aus Aufgabe 2 weiter, weil diese bereits zu guten visuellen Trennungen gefuehrt haben. Die Merkmale beschreiben sowohl zeitliche Eigenschaften als auch spektrale Eigenschaften des Signals. Dadurch muss das MLP nicht direkt auf den Rohsignalen lernen, sondern bekommt kompakte Signalbeschreibungen.
 
-## Folie 6: Positionssplit und Channel-Behandlung
+## Folie 6: Split und Channel-Behandlung
 
 **Bild:** keins oder kleine Tabelle
 
@@ -101,17 +101,18 @@ Wir verwenden bewusst die Merkmale aus Aufgabe 2 weiter, weil diese bereits zu g
 
 - Feature-Mittelung ueber `mID`
 - Merkmalsextraktion pro Datei vor der Mittelung
-- Fester Split ueber Position:
-    - Dev: `Pos03`, `Pos05`
-    - Test: `Pos07`, `Pos09`
-    - Train: alle anderen Positionen
+- Fester Split ueber Zahnraeder:
+    - Train: `Z01`, `Z02`
+    - Dev: `Z04`
+    - Test: `Z03`
+- `Z05` positionsbasiert auf alle Splits verteilt
 - Zwei Modelle:
     - `Ch1`
     - `Ch2`
 
 **Notizen:**
 
-Wir extrahieren die Merkmale pro Rohdatei und mitteln danach die Featurewerte ueber alle `mID`. Dadurch werden Wiederholungsmessungen in der Merkmalsebene zusammengefasst. Der Split wird vorher ueber feste Positionen definiert, sodass keine gemittelte Gruppe Daten aus verschiedenen Splits mischt. `Ch1` und `Ch2` werden nicht als Feature codiert, sondern bekommen je ein eigenes Modell.
+Wir extrahieren die Merkmale pro Rohdatei und mitteln danach die Featurewerte ueber alle `mID`. Dadurch werden Wiederholungsmessungen in der Merkmalsebene zusammengefasst. Der Split trennt die guten Zahnraeder staerker nach Zahnrad-Identitaet: `Z04` ist nur im Entwicklungssatz, `Z03` nur im Testsatz. `Z05` muss als einziges beschaedigtes Zahnrad weiterhin positionsbasiert auf Train, Dev und Test verteilt werden. `Ch1` und `Ch2` werden nicht als Feature codiert, sondern bekommen je ein eigenes Modell.
 
 ## Folie 7: Train-, Dev- und Testsplit
 
@@ -119,23 +120,22 @@ Wir extrahieren die Merkmale pro Rohdatei und mitteln danach die Featurewerte ue
 
 **Text auf der Folie:**
 
-- Split-Verhaeltnis: 60 / 20 / 20
-- Fester Split nach Position:
+- Split nach Zahnrad-Identitaet:
 
 ```text
-Dev:  Pos03, Pos05
-Test: Pos07, Pos09
-Train: Rest
+Train: Z01, Z02 + Z05-Positionen Pos00, Pos01, Pos02, Pos04, Pos06, Pos08
+Dev:   Z04      + Z05-Positionen Pos03, Pos05
+Test:  Z03      + Z05-Positionen Pos07, Pos09
 ```
 
-- Ergebnis pro Zahnrad und Channel:
-    - 12 Training
-    - 4 Entwicklung
-    - 4 Test
+- Ergebnis nach `mID`-Mittelung pro Channel:
+    - Train: 52
+    - Dev: 24
+    - Test: 24
 
 **Notizen:**
 
-Der Split ist ein wichtiger methodischer Punkt. Wir verwenden feste Positionen: `Pos03` und `Pos05` fuer den Entwicklungssatz, `Pos07` und `Pos09` fuer den Testsatz und alle anderen Positionen fuer das Training. Dadurch ist der Split reproduzierbar und positionsbezogene Messungen werden nicht zufaellig verteilt.
+Der Split ist ein wichtiger methodischer Punkt. Bei den guten Zahnraedern vermeiden wir, dass dieselbe Zahnrad-Identitaet in allen Splits vorkommt: `Z01` und `Z02` liegen im Training, `Z04` im Entwicklungssatz und `Z03` im Testsatz. Fuer die beschaedigte Klasse ist das nicht vollstaendig moeglich, weil nur `Z05` beschaedigt ist. Deshalb wird `Z05` reproduzierbar ueber Positionen verteilt.
 
 ## Folie 8: MLP-Modell
 
@@ -198,7 +198,7 @@ Die Hyperparameter werden nicht auf dem Testsatz ausgewaehlt. Fuer jede Kombinat
 
 **Notizen:**
 
-Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau aus Aufgabe 1 und 2 erklaeren. Neu und wichtig sind vor allem die Feature-Mittelung und Channel-Routing-Pipeline in `main.py`, der feste Positionssplit in `split.py` und die komplette MLP- und Plot-Logik in `model.py`.
+Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau aus Aufgabe 1 und 2 erklaeren. Neu und wichtig sind vor allem die Feature-Mittelung und Channel-Routing-Pipeline in `main.py`, der zahnradbasierte Split in `split.py` und die komplette MLP- und Plot-Logik in `model.py`.
 
 ## Folie 11: Code-Ausschnitt Split und Routing
 
@@ -207,9 +207,10 @@ Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau 
 **Text auf der Folie:**
 
 - `split.py`
-    - `Pos03`, `Pos05` -> Dev
-    - `Pos07`, `Pos09` -> Test
-    - Rest -> Train
+    - `Z01`, `Z02` -> Train
+    - `Z04` -> Dev
+    - `Z03` -> Test
+    - `Z05` -> positionsbasiert 12/4/4
 -- `main.py`
     - mittelt Featurewerte ueber `mID`
     - trainiert je ein Modell fuer `Ch1` und `Ch2`
@@ -217,7 +218,7 @@ Bei der Code-Vorstellung sollten wir nicht lange den bekannten DataFrame-Aufbau 
 
 **Notizen:**
 
-Hier zeigen wir konkret, wie die Datenbasis entsteht. Der Split ist nicht zufaellig, sondern folgt festen Positionen. Danach werden pro Datei Merkmale extrahiert und in `main.py` ueber `mID` gemittelt. Anschliessend werden fuer `Ch1` und `Ch2` getrennte Modelle trainiert und jedes Testsignal anhand von `sID` an das passende Modell gegeben.
+Hier zeigen wir konkret, wie die Datenbasis entsteht. Der Split ist nicht zufaellig, sondern trennt die guten Zahnraeder nach Identitaet. Nur `Z05` wird positionsbasiert verteilt, damit die beschaedigte Klasse in Train, Dev und Test vertreten ist. Danach werden pro Datei Merkmale extrahiert und in `main.py` ueber `mID` gemittelt. Anschliessend werden fuer `Ch1` und `Ch2` getrennte Modelle trainiert und jedes Testsignal anhand von `sID` an das passende Modell gegeben.
 
 ## Folie 12: Code-Ausschnitt MLP und Evaluation
 
@@ -247,11 +248,12 @@ Hier zeigen wir konkret, wie die Datenbasis entsteht. Der Split ist nicht zufael
 - Train- und Dev-Score pro Trainingsmenge
 - Kurven zeigen Datenbedarf des Modells
 - Bereits kleine Trainingsmenge trennt fast perfekt
-- Ab ca. 40% Trainingsdaten perfekte Dev-Werte
+- Ch1 erreicht frueh perfekte Dev-Werte
+- Ch2 braucht im aktuellen Split die volle Trainingsmenge fuer perfekte Dev-Werte
 
 **Notizen:**
 
-Die Learning Curves zeigen, wie gut das Modell mit wachsender Trainingsmenge wird. Bei 20 Prozent Trainingsdaten ist der Entwicklungssatz noch nicht ganz perfekt. Ab 40 Prozent Trainingsdaten erreichen beide Channel-Modelle im aktuellen Split perfekte Entwicklungswerte.
+Die Learning Curves zeigen, wie gut das Modell mit wachsender Trainingsmenge wird. Im aktuellen Split erreicht `Ch1` schon mit kleinen Trainingsmengen perfekte Entwicklungswerte. `Ch2` verbessert sich schrittweise und erreicht die perfekten Entwicklungswerte erst mit der gesamten Trainingsmenge.
 
 ## Folie 14: Metriken je Channel
 
@@ -324,12 +326,13 @@ Die ROC-Kurve zeigt, wie gut das Modell zwischen beschaedigt und gut trennt, wen
 - Aber:
     - kleiner Datensatz
     - nur `Z05` ist beschaedigt
-    - Testdaten stammen aus denselben Proben
-    - Generalisierung auf neue Zahnraeder offen
+    - gute Testdaten stammen aus unbekanntem Zahnrad `Z03`
+    - beschaedigte Klasse stammt weiterhin nur aus `Z05`
+    - Generalisierung auf neue beschaedigte Zahnraeder offen
 
 **Notizen:**
 
-Der wichtigste Diskussionsteil ist die Einordnung. Das Modell kann die vorhandenen Daten sehr gut trennen. Es ist aber nicht bewiesen, dass es auf beliebige neue Zahnraeder generalisiert. Dafuer braeuchte man mehr beschaedigte Proben und idealerweise einen Test mit komplett unbekannten Zahnraedern.
+Der wichtigste Diskussionsteil ist die Einordnung. Der neue Split prueft die guten Zahnraeder strenger, weil `Z03` im Test nicht im Training vorkommt. Fuer die beschaedigte Klasse bleibt die Aussage begrenzt, weil alle beschaedigten Signale aus `Z05` stammen. Fuer eine robuste Aussage braeuchte man weitere beschaedigte Zahnraeder.
 
 ## Folie 19: Fazit
 
@@ -338,12 +341,12 @@ Der wichtigste Diskussionsteil ist die Einordnung. Das Modell kann die vorhanden
 **Text auf der Folie:**
 
 - Saubere Pipeline von gemittelten Merkmalen zu zwei Channel-MLPs
-- Fester Positionssplit statt zufaelligem Dateisplit
+- Zahnradbasierter Split statt zufaelligem Dateisplit
 - Testsignale werden nach Channel geroutet
 - Beide MLPs erreichen perfekte Testwerte im aktuellen Datensatz
 - Naechster Schritt: mehr beschaedigte Proben testen
 
 **Notizen:**
 
-Zusammenfassend haben wir eine vollstaendige Klassifikationspipeline aufgebaut. Die wichtigsten methodischen Entscheidungen waren die Feature-Mittelung ueber `mID`, der feste Positionssplit und zwei getrennte Modelle fuer `Ch1` und `Ch2`. Das Ergebnis ist sehr gut, muss aber wegen der begrenzten Datenbasis kritisch diskutiert werden. Fuer eine robustere Aussage waeren weitere beschaedigte Zahnraeder notwendig.
+Zusammenfassend haben wir eine vollstaendige Klassifikationspipeline aufgebaut. Die wichtigsten methodischen Entscheidungen waren die Feature-Mittelung ueber `mID`, der zahnradbasierte Split und zwei getrennte Modelle fuer `Ch1` und `Ch2`. Das Ergebnis ist sehr gut, muss aber wegen der begrenzten Datenbasis kritisch diskutiert werden. Fuer eine robustere Aussage waeren weitere beschaedigte Zahnraeder notwendig.
 
