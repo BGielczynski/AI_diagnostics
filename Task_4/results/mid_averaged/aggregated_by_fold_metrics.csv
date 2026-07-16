@@ -1,0 +1,5 @@
+pipeline,n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly,fold
+mid_averaged,80,40,40,40,0,0,40,1.0,1.0,1.0,1.0,1.0,1.0,1.0,fold_1
+mid_averaged,80,40,40,40,0,13,27,1.0,0.675,0.8375,0.8375,0.7547169811320755,0.8602150537634409,0.991875,fold_2
+mid_averaged,80,40,40,40,0,37,3,1.0,0.075,0.5375,0.5375,0.5194805194805194,0.6837606837606837,0.96625,fold_3
+mid_averaged,80,40,40,40,0,20,20,1.0,0.5,0.75,0.75,0.6666666666666666,0.8,0.9981249999999999,fold_4

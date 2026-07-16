@@ -1,0 +1,2 @@
+pipeline,n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly
+mid_averaged,320,160,160,160,0,70,90,1.0,0.5625,0.78125,0.78125,0.6956521739130435,0.8205128205128205,0.97046875

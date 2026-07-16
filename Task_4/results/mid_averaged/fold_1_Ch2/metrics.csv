@@ -1,0 +1,2 @@
+n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly,pipeline,fold,channel,train_specs,test_specs,n_train,threshold,epochs
+40,20,20,20,0,0,20,1.0,1.0,1.0,1.0,1.0,1.0,1.0,mid_averaged,fold_1,Ch2,Z01+Z02+Z03,Z04+Z05,60,1.2560678724980803,335

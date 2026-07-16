@@ -15,7 +15,8 @@ from sklearn.preprocessing import StandardScaler
 
 
 METADATA_COLUMNS = {
-    "path", "fn", "spec", "pos", "mID", "time", "rID", "sID", "label"
+    "path", "fn", "spec", "pos", "mID", "time", "rID", "sID", "label",
+    "mID_count", "source_file_count",
 }
 
 

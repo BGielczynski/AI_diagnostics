@@ -1,5 +1,0 @@
-n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly,fold
-160,40,120,40,0,33,87,1.0,0.725,0.79375,0.8625,0.547945205479452,0.7079646017699115,0.9825,fold_1
-80,40,40,40,0,10,30,1.0,0.75,0.875,0.875,0.8,0.888888888888889,0.999375,fold_2
-80,40,40,40,0,8,32,1.0,0.8,0.9,0.9,0.8333333333333334,0.9090909090909091,0.995,fold_3
-240,40,200,40,0,153,47,1.0,0.235,0.3625,0.6174999999999999,0.20725388601036268,0.3433476394849785,0.8558749999999999,fold_4

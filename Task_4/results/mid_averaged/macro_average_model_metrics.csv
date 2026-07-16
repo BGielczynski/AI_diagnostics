@@ -1,0 +1,2 @@
+pipeline,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly
+mid_averaged,1.0,0.5625,0.78125,0.78125,0.7402711916441893,0.8379543303959441,0.99

@@ -25,19 +25,31 @@ from split import VALIDATION_SPLITS, select_train_test
 ROOT_DIR = Path(__file__).resolve().parents[1]
 REPO_DIR = ROOT_DIR.parent
 DATA_DIR = REPO_DIR / "Task_2" / "data" / "sig"
-RESULTS_DIR = ROOT_DIR / "results"
-FEATURE_FILE = RESULTS_DIR / "features_per_measurement.csv"
+RESULTS_ROOT = ROOT_DIR / "results"
+SHARED_RESULTS_DIR = RESULTS_ROOT / "shared"
+PER_MEASUREMENT_DIR = RESULTS_ROOT / "per_measurement"
+MID_AVERAGED_DIR = RESULTS_ROOT / "mid_averaged"
+COMPARISON_DIR = RESULTS_ROOT / "comparison"
+FEATURE_FILE = SHARED_RESULTS_DIR / "features_per_measurement.csv"
+LEGACY_FEATURE_FILE = RESULTS_ROOT / "features_per_measurement.csv"
 CHANNELS = ("Ch1", "Ch2")
 PREDICTION_COLUMNS = [
     "path", "fn", "spec", "pos", "mID", "time", "rID", "sID", "label"
 ]
+AVERAGE_GROUP_COLUMNS = ["spec", "pos", "rID", "sID", "label"]
 
 
 def load_or_extract_features(force_extract: bool = False) -> pd.DataFrame:
-    RESULTS_DIR.mkdir(exist_ok=True)
+    SHARED_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     if FEATURE_FILE.exists() and not force_extract:
-        print(f"Lade vorhandene Einzelmessungs-Features: {FEATURE_FILE}")
+        print(f"Lade gemeinsamen Einzelmessungs-Featurecache: {FEATURE_FILE}")
         return pd.read_csv(FEATURE_FILE, dtype={"mID": str, "rID": str})
+
+    if LEGACY_FEATURE_FILE.exists() and not force_extract:
+        print(f"Migriere vorhandenen Featurecache nach: {FEATURE_FILE}")
+        feature_df = pd.read_csv(LEGACY_FEATURE_FILE, dtype={"mID": str, "rID": str})
+        feature_df.to_csv(FEATURE_FILE, index=False)
+        return feature_df
 
     manager = DataFrameManager(str(DATA_DIR))
     manager.load_signals()
@@ -50,15 +62,41 @@ def load_or_extract_features(force_extract: bool = False) -> pd.DataFrame:
     return feature_df
 
 
+def average_features_over_mid(feature_df: pd.DataFrame) -> pd.DataFrame:
+    """Average already extracted features over mID, as in Task 3."""
+    feature_columns = get_feature_columns(feature_df)
+    averaged = (
+        feature_df.groupby(AVERAGE_GROUP_COLUMNS, as_index=False)
+        .agg(
+            {
+                **{column: "mean" for column in feature_columns},
+                "mID": "nunique",
+                "fn": "count",
+            }
+        )
+        .rename(columns={"mID": "mID_count", "fn": "source_file_count"})
+    )
+    averaged["path"] = "features_averaged_over_mid"
+    averaged["fn"] = (
+        averaged["spec"] + "_" + averaged["pos"] + "_avgMID_"
+        + averaged["rID"].astype(str) + "_" + averaged["sID"]
+    )
+    averaged["mID"] = "mean"
+    averaged["time"] = "mean"
+    return averaged
+
+
 def run_model(
     feature_df: pd.DataFrame,
     feature_columns: list[str],
     split,
     channel: str,
+    results_dir: Path,
+    pipeline_name: str,
 ) -> tuple[dict, pd.DataFrame]:
     train_df, test_df = select_train_test(feature_df, split, channel)
-    model_dir = RESULTS_DIR / f"{split.name}_{channel}"
-    model_dir.mkdir(exist_ok=True)
+    model_dir = results_dir / f"{split.name}_{channel}"
+    model_dir.mkdir(parents=True, exist_ok=True)
 
     x_train = train_df[feature_columns].apply(pd.to_numeric, errors="coerce").fillna(0.0)
     x_test = test_df[feature_columns].apply(pd.to_numeric, errors="coerce").fillna(0.0)
@@ -69,6 +107,7 @@ def run_model(
     metrics = calculate_metrics(labels, predicted, scores)
     metrics.update(
         {
+            "pipeline": pipeline_name,
             "fold": split.name,
             "channel": channel,
             "train_specs": "+".join(split.train_specs),
@@ -79,8 +118,13 @@ def run_model(
         }
     )
 
-    predictions = test_df[PREDICTION_COLUMNS].copy()
-    predictions.insert(0, "fold", split.name)
+    available_metadata = [column for column in PREDICTION_COLUMNS if column in test_df]
+    predictions = test_df[available_metadata].copy()
+    predictions.insert(0, "pipeline", pipeline_name)
+    predictions.insert(1, "fold", split.name)
+    if "mID_count" in test_df:
+        predictions["mID_count"] = test_df["mID_count"].to_numpy()
+        predictions["source_file_count"] = test_df["source_file_count"].to_numpy()
     predictions["predicted_label"] = predicted
     predictions["anomaly_score"] = scores
     predictions["threshold"] = detector.threshold_
@@ -89,13 +133,14 @@ def run_model(
     pd.DataFrame([metrics]).to_csv(model_dir / "metrics.csv", index=False)
     detector.save(model_dir / "autoencoder.joblib")
 
-    plot_confusion_matrix(metrics, model_dir / "confusion_matrix.png", f"{split.name} – {channel}")
+    title_suffix = f"{pipeline_name}: {split.name} - {channel}"
+    plot_confusion_matrix(metrics, model_dir / "confusion_matrix.png", title_suffix)
     plot_error_distribution(
         detector.train_errors_, labels, scores, detector.threshold_,
-        model_dir / "reconstruction_errors.png", f"Rekonstruktionsfehler: {split.name} – {channel}",
+        model_dir / "reconstruction_errors.png", f"Rekonstruktionsfehler: {title_suffix}",
     )
-    plot_roc(labels, scores, model_dir / "roc_curve.png", f"ROC: {split.name} – {channel}")
-    plot_loss_curve(detector, model_dir / "training_loss.png", f"Training: {split.name} – {channel}")
+    plot_roc(labels, scores, model_dir / "roc_curve.png", f"ROC: {title_suffix}")
+    plot_loss_curve(detector, model_dir / "training_loss.png", f"Training: {title_suffix}")
     return metrics, predictions
 
 
@@ -115,7 +160,7 @@ def aggregate_predictions(predictions: pd.DataFrame, group_columns: list[str]) -
     return pd.DataFrame(rows)
 
 
-def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path) -> None:
+def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path, pipeline_name: str) -> None:
     columns = ["sensitivity_anomaly", "specificity_normal", "balanced_accuracy", "f1_anomaly"]
     labels = metrics_df["fold"] + " " + metrics_df["channel"]
     x = np.arange(len(metrics_df))
@@ -126,7 +171,7 @@ def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path) -> None:
     ax.set_xticks(x, labels, rotation=35, ha="right")
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
-    ax.set_title("Separate Ergebnisse der acht Autoencoder")
+    ax.set_title(f"Acht Autoencoder: {pipeline_name}")
     ax.legend(ncol=2)
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
@@ -136,7 +181,7 @@ def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path) -> None:
 
 def summarize_scores_by_spec(predictions: pd.DataFrame) -> pd.DataFrame:
     return (
-        predictions.groupby(["fold", "sID", "spec", "label"], as_index=False)
+        predictions.groupby(["pipeline", "fold", "sID", "spec", "label"], as_index=False)
         .agg(
             n_samples=("label", "size"),
             predicted_anomaly_rate=("predicted_label", lambda values: float(np.mean(values == 0))),
@@ -147,56 +192,141 @@ def summarize_scores_by_spec(predictions: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def main(force_extract: bool = False) -> None:
-    feature_df = load_or_extract_features(force_extract)
+def run_pipeline(
+    feature_df: pd.DataFrame, results_dir: Path, pipeline_name: str
+) -> dict[str, pd.DataFrame]:
+    results_dir.mkdir(parents=True, exist_ok=True)
     feature_columns = get_feature_columns(feature_df)
-    print(f"Samples: {len(feature_df)}, Features: {len(feature_columns)}")
-    print(feature_df.groupby(["spec", "sID"]).size().to_string())
+    if len(feature_columns) != 62:
+        raise ValueError(f"Erwartet werden 62 Modellfeatures, erhalten: {len(feature_columns)}")
+
+    sample_counts = feature_df.groupby(["spec", "sID"], as_index=False).size()
+    sample_counts.to_csv(results_dir / "sample_counts.csv", index=False)
+    print(f"\nPipeline {pipeline_name}: Samples={len(feature_df)}, Features={len(feature_columns)}")
+    print(sample_counts.to_string(index=False))
 
     all_metrics = []
     all_predictions = []
     for split in VALIDATION_SPLITS:
         for channel in CHANNELS:
-            print(f"\nTrainiere {split.name}/{channel}: train={split.train_specs}, test={split.test_specs}")
-            metrics, predictions = run_model(feature_df, feature_columns, split, channel)
+            print(f"Trainiere {pipeline_name}/{split.name}/{channel}")
+            metrics, predictions = run_model(
+                feature_df, feature_columns, split, channel, results_dir, pipeline_name
+            )
             all_metrics.append(metrics)
             all_predictions.append(predictions)
             print(
-                f"Sens={metrics['sensitivity_anomaly']:.3f}, "
+                f"  Sens={metrics['sensitivity_anomaly']:.3f}, "
                 f"Spec={metrics['specificity_normal']:.3f}, "
                 f"BAR={metrics['balanced_accuracy']:.3f}, F1={metrics['f1_anomaly']:.3f}"
             )
 
     metrics_df = pd.DataFrame(all_metrics)
     predictions_df = pd.concat(all_predictions, ignore_index=True)
-    metrics_df.to_csv(RESULTS_DIR / "all_model_metrics.csv", index=False)
-    predictions_df.to_csv(RESULTS_DIR / "all_test_predictions.csv", index=False)
+    metrics_df.to_csv(results_dir / "all_model_metrics.csv", index=False)
+    predictions_df.to_csv(results_dir / "all_test_predictions.csv", index=False)
     summarize_scores_by_spec(predictions_df).to_csv(
-        RESULTS_DIR / "score_summary_by_spec.csv", index=False
+        results_dir / "score_summary_by_spec.csv", index=False
     )
 
     by_fold = aggregate_predictions(predictions_df, ["fold"])
     by_channel = aggregate_predictions(predictions_df, ["sID"])
     overall = aggregate_predictions(predictions_df, [])
-    by_fold.to_csv(RESULTS_DIR / "aggregated_by_fold_metrics.csv", index=False)
-    by_channel.to_csv(RESULTS_DIR / "aggregated_by_channel_metrics.csv", index=False)
-    overall.to_csv(RESULTS_DIR / "overall_metrics.csv", index=False)
-    metrics_df.select_dtypes(include="number").mean().to_frame().T.to_csv(
-        RESULTS_DIR / "macro_average_model_metrics.csv", index=False
-    )
+    by_fold.insert(0, "pipeline", pipeline_name)
+    by_channel.insert(0, "pipeline", pipeline_name)
+    overall.insert(0, "pipeline", pipeline_name)
+    by_fold.to_csv(results_dir / "aggregated_by_fold_metrics.csv", index=False)
+    by_channel.to_csv(results_dir / "aggregated_by_channel_metrics.csv", index=False)
+    overall.to_csv(results_dir / "overall_metrics.csv", index=False)
 
-    plot_metric_summary(metrics_df, RESULTS_DIR / "model_metric_summary.png")
-    overall_metrics = overall.iloc[0].to_dict()
+    metric_columns = [
+        "sensitivity_anomaly", "specificity_normal", "accuracy",
+        "balanced_accuracy", "precision_anomaly", "f1_anomaly", "roc_auc_anomaly",
+    ]
+    macro = metrics_df[metric_columns].mean().to_frame().T
+    macro.insert(0, "pipeline", pipeline_name)
+    macro.to_csv(results_dir / "macro_average_model_metrics.csv", index=False)
+
+    plot_metric_summary(metrics_df, results_dir / "model_metric_summary.png", pipeline_name)
     plot_confusion_matrix(
-        overall_metrics, RESULTS_DIR / "overall_confusion_matrix.png",
-        "Aggregierte Verwechslungsmatrix (alle Folds und Kanaele)",
+        overall.iloc[0].to_dict(), results_dir / "overall_confusion_matrix.png",
+        f"Aggregierte Verwechslungsmatrix: {pipeline_name}",
     )
     plot_roc(
-        predictions_df["label"].to_numpy(), predictions_df["normalized_anomaly_score"].to_numpy(),
-        RESULTS_DIR / "overall_roc_curve.png", "Aggregierte ROC-Kurve",
+        predictions_df["label"].to_numpy(),
+        predictions_df["normalized_anomaly_score"].to_numpy(),
+        results_dir / "overall_roc_curve.png", f"Aggregierte ROC: {pipeline_name}",
     )
-    print("\nAggregiertes Ergebnis:")
+    print(f"Aggregiertes Ergebnis {pipeline_name}:")
     print(overall.to_string(index=False))
+    return {
+        "model_metrics": metrics_df,
+        "predictions": predictions_df,
+        "by_fold": by_fold,
+        "by_channel": by_channel,
+        "overall": overall,
+        "macro": macro,
+    }
+
+
+def create_pipeline_comparison(results_by_pipeline: dict[str, dict[str, pd.DataFrame]]) -> None:
+    COMPARISON_DIR.mkdir(parents=True, exist_ok=True)
+    summary_rows = []
+    fold_frames = []
+    for pipeline_name, results in results_by_pipeline.items():
+        pooled = results["overall"].iloc[0].to_dict()
+        pooled["aggregation"] = "pooled"
+        summary_rows.append(pooled)
+        macro = results["macro"].iloc[0].to_dict()
+        macro["aggregation"] = "macro_8_models"
+        summary_rows.append(macro)
+        fold_frames.append(results["by_fold"])
+
+    comparison = pd.DataFrame(summary_rows)
+    comparison.to_csv(COMPARISON_DIR / "pipeline_summary.csv", index=False)
+    by_fold = pd.concat(fold_frames, ignore_index=True)
+    by_fold.to_csv(COMPARISON_DIR / "metrics_by_fold.csv", index=False)
+
+    fold_names = [split.name for split in VALIDATION_SPLITS]
+    x = np.arange(len(fold_names))
+    width = 0.36
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+    for index, (pipeline_name, results) in enumerate(results_by_pipeline.items()):
+        values = (
+            results["by_fold"].set_index("fold")
+            .loc[fold_names, "balanced_accuracy"].to_numpy()
+        )
+        ax.bar(x + (index - 0.5) * width, values, width, label=pipeline_name)
+    ax.set_xticks(x, fold_names)
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Balanced Accuracy")
+    ax.set_title("Pipelinevergleich je Fold (Kanaele aggregiert)")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(COMPARISON_DIR / "balanced_accuracy_by_fold.png", dpi=170)
+    plt.close(fig)
+
+
+def main(force_extract: bool = False, pipeline: str = "both") -> None:
+    per_measurement_df = load_or_extract_features(force_extract)
+    results_by_pipeline = {}
+
+    if pipeline in {"both", "per_measurement"}:
+        results_by_pipeline["per_measurement"] = run_pipeline(
+            per_measurement_df, PER_MEASUREMENT_DIR, "per_measurement"
+        )
+
+    if pipeline in {"both", "mid_averaged"}:
+        mid_averaged_df = average_features_over_mid(per_measurement_df)
+        MID_AVERAGED_DIR.mkdir(parents=True, exist_ok=True)
+        mid_averaged_df.to_csv(MID_AVERAGED_DIR / "features_mid_averaged.csv", index=False)
+        results_by_pipeline["mid_averaged"] = run_pipeline(
+            mid_averaged_df, MID_AVERAGED_DIR, "mid_averaged"
+        )
+
+    if pipeline == "both":
+        create_pipeline_comparison(results_by_pipeline)
 
 
 if __name__ == "__main__":
@@ -205,5 +335,9 @@ if __name__ == "__main__":
         "--force-extract", action="store_true",
         help="Audiofeatures auch bei vorhandenem CSV neu extrahieren",
     )
+    parser.add_argument(
+        "--pipeline", choices=("both", "per_measurement", "mid_averaged"),
+        default="both", help="Auszufuehrende Ergebnispipeline (Standard: beide)",
+    )
     args = parser.parse_args()
-    main(force_extract=args.force_extract)
+    main(force_extract=args.force_extract, pipeline=args.pipeline)
