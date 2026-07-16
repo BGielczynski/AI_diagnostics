@@ -1,0 +1,2 @@
+n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly
+560,160,400,160,0,204,196,1.0,0.49,0.6357142857142857,0.745,0.43956043956043955,0.6106870229007634,0.90859375

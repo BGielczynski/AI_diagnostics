@@ -1,0 +1,2 @@
+n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly,n_train,threshold,epochs
+70.0,20.0,50.0,20.0,0.0,25.5,24.5,1.0,0.6275000000000001,0.7328125000000001,0.81375,0.5976340524769281,0.7125825868245474,0.9579583333333334,150.0,0.4882169259095793,435.0
