@@ -26,7 +26,7 @@ style: |
 Notizen - 30 Sekunden:
 Zuerst stellen wir Daten und Versuchsaufbau vor. Danach erklaeren wir Modell und
 Metriken, vergleichen beide Vorverarbeitungen und schliessen mit der fachlichen
-Einordnung. Der Vortrag ist auf etwa neun Minuten und zehn Sekunden ausgelegt.
+Einordnung. Der Vortrag ist auf etwa neun Minuten und dreissig Sekunden ausgelegt.
 -->
 
 ---
@@ -87,7 +87,7 @@ Training ausschliesslich mit gesunden Daten (Label 0).
 <!--
 Notizen - 55 Sekunden:
 Aus dem Zahnrad-Signal entstehen 62 Audiofeatures. Der Encoder komprimiert diese
-ueber 32 auf 8 Werte; der Decoder rekonstruiert den Merkmalsvektor. Ein grosser
+ueber 20 auf 12 Werte; der Decoder rekonstruiert den Merkmalsvektor. Ein grosser
 MSE weist auf eine Anomalie hin. Alle Hyperparameter bleiben zwischen den
 Pipelines gleich, und die Skalierung wird je Trainingsfold neu gelernt.
 -->
@@ -99,7 +99,7 @@ Pipelines gleich, und die Skalierung wird je Trainingsfold neu gelernt.
 **Anomaliescore:** mittlerer quadratischer Rekonstruktionsfehler im
 standardisierten Merkmalsraum
 
-**Schwelle:** 95%-Quantil der Fehler im gesunden Training
+**Schwelle:** 98%-Quantil der Fehler im gesunden Training
 
 - Klassenkonvention: anomal/Z05 = Label 1 (positiv), gesund = Label 0 (negativ)
 - oberhalb der Schwelle: anomal (Label 1)
@@ -113,10 +113,12 @@ standardisierten Merkmalsraum
 ungemittelte Pipeline ungleiche Testgruppengroessen besitzt.
 
 <!--
-Notizen - 50 Sekunden:
+Notizen - 60 Sekunden:
 Ein gepoolter Vergleich allein waere unfair: Ohne Mittelung hat Fold 4 wegen
 Z01 besonders viele Testzeilen. BA gleicht Klassen aus; das Makromittel gibt
-zusaetzlich jedem der acht Modelle dasselbe Gewicht.
+zusaetzlich jedem der acht Modelle dasselbe Gewicht. Das 98%-Quantil setzt eine
+konservativere Schwelle: Es reduziert Fehlalarme, kann aber einzelne Anomalien
+uebersehen. Z05 wird nicht zur Wahl der Schwelle verwendet.
 -->
 
 ---
@@ -127,17 +129,17 @@ zusaetzlich jedem der acht Modelle dasselbe Gewicht.
 
 | Fold, Ch1 / Ch2 | TPR / Sensitivität | TNR / Spezifität | BA |
 |---|---:|---:|---:|
-| 1 | 1,000 | 0,717 / 0,733 | 0,858 / 0,867 |
-| 2 | 1,000 | 0,750 / 0,750 | 0,875 / 0,875 |
-| 3 | 1,000 | 0,850 / 0,750 | 0,925 / 0,875 |
-| 4 | 1,000 | 0,190 / 0,280 | 0,595 / 0,640 |
+| 1 | 1,000 | 0,867 / 0,883 | 0,933 / 0,942 |
+| 2 | 1,000 | 0,900 / 0,850 | 0,950 / 0,925 |
+| 3 | 1,000 | 0,950 / 0,950 | 0,975 / 0,975 |
+| 4 | 1,000 | 0,290 / 0,730 | 0,645 / 0,865 |
 
 <!--
 Notizen - 65 Sekunden:
-Die Sensitivität beträgt in allen Folds 1,000; es treten keine False Negatives
-der Anomalieklasse auf. Fold 1 bis 3 sind gut, Fold 4 weist dagegen viele False
-Positives der gesunden Z01-Testgruppe auf. Ohne Mittelung bleibt die Variation der fuenf
-Z01-mIDs sichtbar.
+Alle 16 Modelle erreichen eine Sensitivität von 1,000; es treten keine False
+Negatives der Anomalieklasse auf. Fold 1 bis 3 sind insgesamt gut. In Fold 4
+unterscheiden sich Ch1 und Ch2 deutlich; besonders Ch1 erzeugt viele False
+Positives der gesunden Z01-Testgruppe.
 -->
 
 ---
@@ -148,19 +150,19 @@ Z01-mIDs sichtbar.
 
 | BA, Kanaele gepoolt | Einzelmessung | mID-gemittelt |
 |---|---:|---:|
-| Fold 1 | 0,863 | **1,000** |
-| Fold 2 | **0,875** | 0,838 |
-| Fold 3 | **0,900** | 0,538 |
-| Fold 4 | 0,617 | **0,750** |
-| Makromittel 8 Modelle | **0,814** | 0,781 |
+| Fold 1 | 0,938 | **0,963** |
+| Fold 2 | **0,938** | 0,700 |
+| Fold 3 | **0,975** | 0,500 |
+| Fold 4 | 0,755 | **0,838** |
+| Makromittel 8 Modelle | **0,901** | 0,750 |
 
 TPR/Sensitivität in beiden Pipelines und allen Modellen: **1,000**.
 
 <!--
 Notizen - 75 Sekunden:
-Die Mittelung ist kein genereller Gewinn. Sie loest Fold 1 komplett und verbessert
-Fold 4 deutlich. Gleichzeitig wird Fold 3 stark schlechter. Im fairen
-Modellmakro bleibt die Einzelmessung mit 0,814 gegenueber 0,781 vorne.
+Die Mittelung ist kein genereller Gewinn. Sie verbessert Fold 1 leicht und Fold 4
+deutlich, verschlechtert aber Fold 2 und besonders Fold 3. Im fairen Modellmakro
+bleibt die Einzelmessung mit 0,901 gegenueber 0,750 klar vorne.
 -->
 
 ---
@@ -170,10 +172,10 @@ Modellmakro bleibt die Einzelmessung mit 0,814 gegenueber 0,781 vorne.
 ![width:560px Fehlerverteilung mID-gemittelt, Fold 3 Ch1](results/mid_averaged/fold_3_Ch1/reconstruction_errors.png)
 
 - Fold 4 profitiert: mID-Variation von Z01 wird geglaettet
-- Fold 1 profitiert ebenfalls von geglaettetem Z04 im Test
+- Fold 1 verbessert sich leicht auf BA 0,963; Fold 2 faellt auf BA 0,700
 - Fold 3 verschlechtert sich: Z02 bleibt im Test ungemittelt; im Training werden
   Z01 und Z04 geglaettet, Z03 dagegen nicht
-- Fold 3 TNR/Spezifität: Ch1 **0,050**, Ch2 **0,100**
+- Fold 3 TNR/Spezifität: Ch1 **0,000**, Ch2 **0,000**
 - Die Mittelung veraendert damit die Definition des gelernten Normalzustands
 
 <!--
@@ -188,13 +190,13 @@ Verteilungsabweichung, nicht direkt die Schadensursache.
 
 # Diskussion
 
-- **Robust:** Beide Varianten erreichen eine TPR/Sensitivität von **1,000**
-- **Einzelmessung:** bessere Makro-BA und stabiler in Fold 2/3
+- **Hohe Sensitivität:** beide Pipelines erreichen gepoolt eine TPR von **1,000**
+- **Einzelmessung:** deutlich bessere Makro-BA und robust in Fold 2/3
 - **mID-Mittelung:** weniger Z01/Z04-Variation, bessere Folds 1/4 und hoehere
-  gepoolte AUC von 0,970
+  gepoolte AUC von 0,977
 - **Risiko der Mittelung:** inkonsistente Vorverarbeitung, weil nur Z01 und Z04
   mehrere mIDs besitzen
-- **Grenze:** Die 95%-Trainingsschwelle generalisiert nicht immer auf eine neue
+- **Grenze:** Die 98%-Trainingsschwelle generalisiert nicht immer auf eine neue
   gesunde Z-Gruppe
 
 Naechster Schritt: gruppenbasierte Schwellenkalibrierung und Vergleich mit einer
@@ -209,22 +211,33 @@ die Mittelung einen Fold verbessern und einen anderen verschlechtern.
 
 ---
 
-# Fazit
+# Fazit: Einzelmessungen
 
-1. Zwei sauber getrennte 4x2-Pipelines ergeben insgesamt 16 Autoencoder.
-2. Keine tatsächlich anomale Messung wird als gesund vorhergesagt:
-   **TPR/Sensitivität 1,000**.
-3. Die mID-Mittelung verbessert Fold 1 und 4, verschlechtert Fold 2 und besonders Fold 3.
-4. Im fairen Makromittel ist die Einzelmessung besser: **BA 0,814 vs. 0,781**.
+Ch1 und Ch2 werden fuer die Bewertung je Fold gepoolt.
+
+| Fold (gesunder Test) | TPR | TNR | Accuracy | BA | F1 |
+|---|---:|---:|---:|---:|---:|
+| 1 (Z04) | 1,000 | 0,875 | 0,906 | 0,938 | 0,842 |
+| 2 (Z03) | 1,000 | 0,875 | 0,938 | 0,938 | 0,941 |
+| **3 (Z02) - bestes** | **1,000** | **0,950** | **0,975** | **0,975** | **0,976** |
+| **4 (Z01) - schlechtestes** | **1,000** | **0,510** | **0,592** | **0,755** | **0,449** |
+
+**ROC-Hinweis:** Fold 2 erreicht in Ch1 und Ch2 jeweils **ROC-AUC 1,000**.
 
 ## Kernaussage
 
-**mID-Mittelung reduziert Variation, kann aber selbst einen Domain Shift erzeugen,
-wenn nicht alle Z-Gruppen ueber dieselbe Anzahl an mIDs verfuegen.**
+**Alle vier Fold-Modelle erkennen die Anomalien vollständig. Die Unterschiede
+entstehen durch False Positives bei den unbekannten gesunden Gruppen.**
 
 <!--
-Notizen - 40 Sekunden:
-Fuer die Hauptaussage wuerden wir die Einzelmessung bevorzugen und die gemittelte
-Pipeline als wichtigen Ablationsvergleich zeigen. Gesamte geplante Sprechzeit:
-etwa neun Minuten und zehn Sekunden; damit bleibt Puffer bis zur Zehn-Minuten-Grenze.
+Notizen - 50 Sekunden:
+Fuer die Schlussbewertung poolen wir beide Kanaele und betrachten die vier
+Fold-Konfigurationen getrennt. Fold 3 ist mit einer Balanced Accuracy von 0,975
+das beste Ergebnis. Fold 4 ist mit 0,755 das schlechteste, weil die unbekannte
+gesunde Gruppe Z01 98 False Positives verursacht. Fold 2 erreicht in beiden
+Kanaelen eine ROC-AUC von 1,000: Die Score-Rangfolge trennt die Klassen perfekt,
+am festen Schwellenwert entstehen aber zwei beziehungsweise drei False Positives.
+Die Kreuzvalidierung waehlt nicht automatisch ein finales Einsatzmodell; dafuer
+wuerde anschliessend auf allen gesunden Gruppen neu trainiert. Gesamte Sprechzeit:
+etwa 9:30 Minuten.
 -->

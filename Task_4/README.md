@@ -40,4 +40,4 @@ Task_4/results/
 
 Labelkonvention: Z01-Z04 sind gesund (`0`), Z05 ist anomal/beschaedigt (`1`).
 Die Autoencoder werden ausschliesslich auf gesunden Samples trainiert. Die
-Anomalieschwelle entspricht dem 95%-Quantil der jeweiligen Trainingsfehler.
+Anomalieschwelle entspricht dem 98%-Quantil der jeweiligen Trainingsfehler.

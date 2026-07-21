@@ -33,8 +33,8 @@ class AutoencoderDetector:
 
     def __init__(
         self,
-        hidden_layer_sizes: tuple[int, ...] = (32, 8, 32),
-        threshold_quantile: float = 0.95,
+        hidden_layer_sizes: tuple[int, ...] = (20, 12, 20),
+        threshold_quantile: float = 0.98,
         random_state: int = 42,
     ):
         self.hidden_layer_sizes = hidden_layer_sizes
