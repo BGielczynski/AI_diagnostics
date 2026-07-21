@@ -17,7 +17,7 @@ from autoencoder import (
     plot_loss_curve,
     plot_roc,
 )
-from dataframe_manager import DataFrameManager
+from dataframe_manager import DataFrameManager, LABEL_BY_SPEC
 from extraction import extract_features
 from split import VALIDATION_SPLITS, select_train_test
 
@@ -33,6 +33,10 @@ COMPARISON_DIR = RESULTS_ROOT / "comparison"
 FEATURE_FILE = SHARED_RESULTS_DIR / "features_per_measurement.csv"
 LEGACY_FEATURE_FILE = RESULTS_ROOT / "features_per_measurement.csv"
 CHANNELS = ("Ch1", "Ch2")
+PIPELINE_DISPLAY_NAMES = {
+    "per_measurement": "Einzelmessungen",
+    "mid_averaged": "mID-gemittelte Merkmale",
+}
 PREDICTION_COLUMNS = [
     "path", "fn", "spec", "pos", "mID", "time", "rID", "sID", "label"
 ]
@@ -43,11 +47,17 @@ def load_or_extract_features(force_extract: bool = False) -> pd.DataFrame:
     SHARED_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     if FEATURE_FILE.exists() and not force_extract:
         print(f"Lade gemeinsamen Einzelmessungs-Featurecache: {FEATURE_FILE}")
-        return pd.read_csv(FEATURE_FILE, dtype={"mID": str, "rID": str})
+        feature_df = pd.read_csv(FEATURE_FILE, dtype={"mID": str, "rID": str})
+        expected_labels = feature_df["spec"].map(LABEL_BY_SPEC).astype(int)
+        if not feature_df["label"].astype(int).equals(expected_labels):
+            feature_df["label"] = expected_labels
+            feature_df.to_csv(FEATURE_FILE, index=False)
+        return feature_df
 
     if LEGACY_FEATURE_FILE.exists() and not force_extract:
         print(f"Migriere vorhandenen Featurecache nach: {FEATURE_FILE}")
         feature_df = pd.read_csv(LEGACY_FEATURE_FILE, dtype={"mID": str, "rID": str})
+        feature_df["label"] = feature_df["spec"].map(LABEL_BY_SPEC).astype(int)
         feature_df.to_csv(FEATURE_FILE, index=False)
         return feature_df
 
@@ -133,7 +143,9 @@ def run_model(
     pd.DataFrame([metrics]).to_csv(model_dir / "metrics.csv", index=False)
     detector.save(model_dir / "autoencoder.joblib")
 
-    title_suffix = f"{pipeline_name}: {split.name} - {channel}"
+    pipeline_display = PIPELINE_DISPLAY_NAMES.get(pipeline_name, pipeline_name)
+    fold_display = split.name.replace("_", " ").title()
+    title_suffix = f"{pipeline_display} – {fold_display}, {channel}"
     plot_confusion_matrix(metrics, model_dir / "confusion_matrix.png", title_suffix)
     plot_error_distribution(
         detector.train_errors_, labels, scores, detector.threshold_,
@@ -162,18 +174,18 @@ def aggregate_predictions(predictions: pd.DataFrame, group_columns: list[str]) -
 
 def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path, pipeline_name: str) -> None:
     columns = [
-        "specificity_anomaly_0",
-        "sensitivity_healthy_1",
+        "sensitivity_anomaly_1",
+        "specificity_healthy_0",
         "balanced_accuracy",
-        "f1_healthy_1",
+        "f1_anomaly_1",
     ]
     display_labels = {
-        "specificity_anomaly_0": "Z05-Erkennung",
-        "sensitivity_healthy_1": "Gesund-Erkennung",
+        "sensitivity_anomaly_1": "TPR / Sensitivität",
+        "specificity_healthy_0": "TNR / Spezifität",
         "balanced_accuracy": "Balanced Accuracy",
-        "f1_healthy_1": "F1 Gesund (Label 1)",
+        "f1_anomaly_1": "F1-Score anomal (Label 1)",
     }
-    labels = metrics_df["fold"] + " " + metrics_df["channel"]
+    labels = metrics_df["fold"].str.replace("_", " ").str.title() + " – " + metrics_df["channel"]
     x = np.arange(len(metrics_df))
     width = 0.19
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -187,7 +199,8 @@ def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path, pipeline_na
     ax.set_xticks(x, labels, rotation=35, ha="right")
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
-    ax.set_title(f"Acht Autoencoder: {pipeline_name}")
+    pipeline_display = PIPELINE_DISPLAY_NAMES.get(pipeline_name, pipeline_name)
+    ax.set_title(f"Modellmetriken – {pipeline_display}")
     ax.legend(ncol=2)
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
@@ -200,7 +213,7 @@ def summarize_scores_by_spec(predictions: pd.DataFrame) -> pd.DataFrame:
         predictions.groupby(["pipeline", "fold", "sID", "spec", "label"], as_index=False)
         .agg(
             n_samples=("label", "size"),
-            predicted_anomaly_rate=("predicted_label", lambda values: float(np.mean(values == 0))),
+            predicted_anomaly_rate=("predicted_label", lambda values: float(np.mean(values == 1))),
             mean_normalized_score=("normalized_anomaly_score", "mean"),
             median_normalized_score=("normalized_anomaly_score", "median"),
             max_normalized_score=("normalized_anomaly_score", "max"),
@@ -232,10 +245,10 @@ def run_pipeline(
             all_metrics.append(metrics)
             all_predictions.append(predictions)
             print(
-                f"  Z05={metrics['specificity_anomaly_0']:.3f}, "
-                f"Gesund={metrics['sensitivity_healthy_1']:.3f}, "
-                f"BAR={metrics['balanced_accuracy']:.3f}, "
-                f"F1(gesund)={metrics['f1_healthy_1']:.3f}"
+                f"  TPR/Sensitivität={metrics['sensitivity_anomaly_1']:.3f}, "
+                f"TNR/Spezifität={metrics['specificity_healthy_0']:.3f}, "
+                f"BA={metrics['balanced_accuracy']:.3f}, "
+                f"F1(anomal)={metrics['f1_anomaly_1']:.3f}"
             )
 
     metrics_df = pd.DataFrame(all_metrics)
@@ -257,10 +270,10 @@ def run_pipeline(
     overall.to_csv(results_dir / "overall_metrics.csv", index=False)
 
     metric_columns = [
-        "sensitivity_healthy_1", "specificity_anomaly_0", "accuracy",
-        "balanced_accuracy", "precision_healthy_1", "f1_healthy_1",
-        "recall_anomaly_0", "precision_anomaly_0", "f1_anomaly_0",
-        "roc_auc_anomaly_0",
+        "sensitivity_anomaly_1", "specificity_healthy_0", "accuracy",
+        "balanced_accuracy", "recall_anomaly_1", "precision_anomaly_1",
+        "f1_anomaly_1", "recall_healthy_0", "precision_healthy_0",
+        "f1_healthy_0", "roc_auc_anomaly_1",
     ]
     macro = metrics_df[metric_columns].mean().to_frame().T
     macro.insert(0, "pipeline", pipeline_name)
@@ -269,12 +282,13 @@ def run_pipeline(
     plot_metric_summary(metrics_df, results_dir / "model_metric_summary.png", pipeline_name)
     plot_confusion_matrix(
         overall.iloc[0].to_dict(), results_dir / "overall_confusion_matrix.png",
-        f"Aggregierte Verwechslungsmatrix: {pipeline_name}",
+        f"Aggregierte Verwechslungsmatrix – {PIPELINE_DISPLAY_NAMES.get(pipeline_name, pipeline_name)}",
     )
     plot_roc(
         predictions_df["label"].to_numpy(),
         predictions_df["normalized_anomaly_score"].to_numpy(),
-        results_dir / "overall_roc_curve.png", f"Aggregierte ROC: {pipeline_name}",
+        results_dir / "overall_roc_curve.png",
+        f"Aggregierte ROC – {PIPELINE_DISPLAY_NAMES.get(pipeline_name, pipeline_name)}",
     )
     print(f"Aggregiertes Ergebnis {pipeline_name}:")
     print(overall.to_string(index=False))
@@ -315,11 +329,17 @@ def create_pipeline_comparison(results_by_pipeline: dict[str, dict[str, pd.DataF
             results["by_fold"].set_index("fold")
             .loc[fold_names, "balanced_accuracy"].to_numpy()
         )
-        ax.bar(x + (index - 0.5) * width, values, width, label=pipeline_name)
-    ax.set_xticks(x, fold_names)
+        ax.bar(
+            x + (index - 0.5) * width,
+            values,
+            width,
+            label=PIPELINE_DISPLAY_NAMES.get(pipeline_name, pipeline_name),
+        )
+    fold_labels = [name.replace("_", " ").title() for name in fold_names]
+    ax.set_xticks(x, fold_labels)
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Balanced Accuracy")
-    ax.set_title("Pipelinevergleich je Fold (Kanaele aggregiert)")
+    ax.set_title("Pipelinevergleich je Fold (Kanäle aggregiert)")
     ax.legend()
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()

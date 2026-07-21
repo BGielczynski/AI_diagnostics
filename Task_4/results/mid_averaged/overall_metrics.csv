@@ -1,2 +1,2 @@
-pipeline,n_samples,n_anomaly,n_healthy,true_negative,false_positive,false_negative,true_positive,sensitivity_healthy_1,specificity_anomaly_0,accuracy,balanced_accuracy,precision_healthy_1,f1_healthy_1,recall_anomaly_0,precision_anomaly_0,f1_anomaly_0,roc_auc_anomaly_0
-mid_averaged,320,160,160,160,0,70,90,0.5625,1.0,0.78125,0.78125,1.0,0.72,1.0,0.6956521739130435,0.8205128205128205,0.97046875
+pipeline,n_samples,n_anomaly,n_healthy,true_negative,false_positive,false_negative,true_positive,sensitivity_anomaly_1,specificity_healthy_0,accuracy,balanced_accuracy,recall_anomaly_1,precision_anomaly_1,f1_anomaly_1,recall_healthy_0,precision_healthy_0,f1_healthy_0,roc_auc_anomaly_1
+mid_averaged,320,160,160,90,70,0,160,1.0,0.5625,0.78125,0.78125,1.0,0.6956521739130435,0.8205128205128205,0.5625,1.0,0.72,0.97046875

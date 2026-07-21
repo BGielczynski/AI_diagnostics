@@ -78,8 +78,8 @@ class AutoencoderDetector:
         return np.mean(np.square(scaled - reconstructed), axis=1)
 
     def predict_label(self, x: pd.DataFrame) -> np.ndarray:
-        # Projektkonvention: 0 = beschaedigt/anomal, 1 = gesund.
-        return np.where(self.anomaly_score(x) > self.threshold_, 0, 1)
+        # Fachübliche Konvention: 1 = beschädigt/anomal, 0 = gesund.
+        return np.where(self.anomaly_score(x) > self.threshold_, 1, 0)
 
     def save(self, output_path: Path) -> None:
         joblib.dump(self, output_path)
@@ -88,34 +88,35 @@ class AutoencoderDetector:
 def calculate_metrics(
     true_labels: np.ndarray, predicted_labels: np.ndarray, scores: np.ndarray
 ) -> dict[str, float | int]:
-    anomaly_true = np.asarray(true_labels) == 0
-    anomaly_pred = np.asarray(predicted_labels) == 0
-    # Labelkonvention des Projekts: 0 = anomal/negativ, 1 = gesund/positiv.
-    tn = int(np.sum(anomaly_true & anomaly_pred))
-    fp = int(np.sum(anomaly_true & ~anomaly_pred))
-    fn = int(np.sum(~anomaly_true & anomaly_pred))
-    tp = int(np.sum(~anomaly_true & ~anomaly_pred))
+    true_labels = np.asarray(true_labels)
+    predicted_labels = np.asarray(predicted_labels)
+    # Fachübliche Konvention: 1 = anomal/positiv, 0 = gesund/negativ.
+    anomaly_true = true_labels == 1
+    anomaly_pred = predicted_labels == 1
+    tn = int(np.sum(~anomaly_true & ~anomaly_pred))
+    fp = int(np.sum(~anomaly_true & anomaly_pred))
+    fn = int(np.sum(anomaly_true & ~anomaly_pred))
+    tp = int(np.sum(anomaly_true & anomaly_pred))
 
-    sensitivity_healthy = tp / (tp + fn) if tp + fn else 0.0
-    specificity_anomaly = tn / (tn + fp) if tn + fp else 0.0
-    precision_healthy = tp / (tp + fp) if tp + fp else 0.0
-    f1_healthy = (
-        2 * precision_healthy * sensitivity_healthy
-        / (precision_healthy + sensitivity_healthy)
-        if precision_healthy + sensitivity_healthy
+    sensitivity_anomaly = tp / (tp + fn) if tp + fn else 0.0
+    specificity_healthy = tn / (tn + fp) if tn + fp else 0.0
+    precision_anomaly = tp / (tp + fp) if tp + fp else 0.0
+    f1_anomaly = (
+        2 * precision_anomaly * sensitivity_anomaly
+        / (precision_anomaly + sensitivity_anomaly)
+        if precision_anomaly + sensitivity_anomaly
         else 0.0
     )
-    precision_anomaly = tn / (tn + fn) if tn + fn else 0.0
-    recall_anomaly = specificity_anomaly
-    f1_anomaly = (
-        2 * precision_anomaly * recall_anomaly
-        / (precision_anomaly + recall_anomaly)
-        if precision_anomaly + recall_anomaly
+    precision_healthy = tn / (tn + fn) if tn + fn else 0.0
+    recall_healthy = specificity_healthy
+    f1_healthy = (
+        2 * precision_healthy * recall_healthy
+        / (precision_healthy + recall_healthy)
+        if precision_healthy + recall_healthy
         else 0.0
     )
     accuracy = (tp + tn) / (tp + tn + fp + fn)
-    anomaly_targets = anomaly_true.astype(int)
-    auc = roc_auc_score(anomaly_targets, scores) if len(np.unique(anomaly_targets)) == 2 else np.nan
+    auc = roc_auc_score(true_labels, scores) if len(np.unique(true_labels)) == 2 else np.nan
     return {
         "n_samples": len(true_labels),
         "n_anomaly": int(np.sum(anomaly_true)),
@@ -124,16 +125,17 @@ def calculate_metrics(
         "false_positive": fp,
         "false_negative": fn,
         "true_positive": tp,
-        "sensitivity_healthy_1": sensitivity_healthy,
-        "specificity_anomaly_0": specificity_anomaly,
+        "sensitivity_anomaly_1": sensitivity_anomaly,
+        "specificity_healthy_0": specificity_healthy,
         "accuracy": accuracy,
-        "balanced_accuracy": (sensitivity_healthy + specificity_anomaly) / 2,
-        "precision_healthy_1": precision_healthy,
-        "f1_healthy_1": f1_healthy,
-        "recall_anomaly_0": recall_anomaly,
-        "precision_anomaly_0": precision_anomaly,
-        "f1_anomaly_0": f1_anomaly,
-        "roc_auc_anomaly_0": auc,
+        "balanced_accuracy": (sensitivity_anomaly + specificity_healthy) / 2,
+        "recall_anomaly_1": sensitivity_anomaly,
+        "precision_anomaly_1": precision_anomaly,
+        "f1_anomaly_1": f1_anomaly,
+        "recall_healthy_0": recall_healthy,
+        "precision_healthy_0": precision_healthy,
+        "f1_healthy_0": f1_healthy,
+        "roc_auc_anomaly_1": auc,
     }
 
 
@@ -152,11 +154,11 @@ def plot_confusion_matrix(metrics: dict, output_path: Path, title: str) -> None:
     )
     fig, ax = plt.subplots(figsize=(7.2, 6.0))
     image = ax.imshow(matrix, cmap="Blues")
-    ax.set_xticks([0, 1], ["Anomal\n(Label 0)", "Gesund\n(Label 1)"])
-    ax.set_yticks([0, 1], ["Anomal\n(Label 0)", "Gesund\n(Label 1)"])
+    ax.set_xticks([0, 1], ["Gesund\n(Label 0)", "Anomal\n(Label 1)"])
+    ax.set_yticks([0, 1], ["Gesund\n(Label 0)", "Anomal\n(Label 1)"])
     ax.set_xlabel("Vorhergesagt")
-    ax.set_ylabel("Tatsaechlich")
-    ax.set_title(f"{title}\nNegativ: anomal (0) | Positiv: gesund (1)")
+    ax.set_ylabel("Tatsächlich")
+    ax.set_title(f"{title}\nNegativ: gesund (0) | Positiv: anomal (1)")
     color_threshold = float(matrix.max()) / 2 if matrix.size else 0.0
     for row in range(2):
         for column in range(2):
@@ -188,8 +190,20 @@ def plot_error_distribution(
     fig, ax = plt.subplots(figsize=(8, 5))
     bins = np.histogram_bin_edges(np.concatenate([train_errors, test_scores]), bins=28)
     ax.hist(train_errors, bins=bins, alpha=0.45, label="Training gesund", color="#4c78a8")
-    ax.hist(test_scores[test_labels == 1], bins=bins, alpha=0.55, label="Test gesund", color="#59a14f")
-    ax.hist(test_scores[test_labels == 0], bins=bins, alpha=0.55, label="Test Z05", color="#e15759")
+    ax.hist(
+        test_scores[test_labels == 0],
+        bins=bins,
+        alpha=0.55,
+        label="Test gesund (Label 0)",
+        color="#59a14f",
+    )
+    ax.hist(
+        test_scores[test_labels == 1],
+        bins=bins,
+        alpha=0.55,
+        label="Test anomal (Label 1)",
+        color="#e15759",
+    )
     ax.axvline(threshold, color="black", linestyle="--", linewidth=2, label=f"Schwelle {threshold:.3f}")
     ax.set_xlabel("Mittlerer quadratischer Rekonstruktionsfehler")
     ax.set_ylabel("Anzahl")
@@ -202,14 +216,13 @@ def plot_error_distribution(
 
 
 def plot_roc(labels: np.ndarray, scores: np.ndarray, output_path: Path, title: str) -> None:
-    anomaly_true = (labels == 0).astype(int)
-    fpr, tpr, _ = roc_curve(anomaly_true, scores)
-    auc = roc_auc_score(anomaly_true, scores)
+    fpr, tpr, _ = roc_curve(labels, scores, pos_label=1)
+    auc = roc_auc_score(labels, scores)
     fig, ax = plt.subplots(figsize=(6.4, 5.2))
     ax.plot(fpr, tpr, linewidth=2, label=f"Autoencoder, AUC={auc:.3f}")
     ax.plot([0, 1], [0, 1], "--", color="gray", label="Zufall")
-    ax.set_xlabel("False-Positive-Rate")
-    ax.set_ylabel("True-Positive-Rate")
+    ax.set_xlabel("False Positive Rate (Anomalie als Zielklasse)")
+    ax.set_ylabel("Sensitivität / Recall der Anomalieklasse")
     ax.set_title(title)
     ax.legend(loc="lower right")
     ax.grid(alpha=0.25)

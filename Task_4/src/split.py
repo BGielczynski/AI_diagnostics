@@ -28,7 +28,7 @@ def select_train_test(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     channel_df = df[df["sID"] == channel].copy()
     train_df = channel_df[
-        channel_df["spec"].isin(split.train_specs) & (channel_df["label"] == 1)
+        channel_df["spec"].isin(split.train_specs) & (channel_df["label"] == 0)
     ].copy()
     test_df = channel_df[channel_df["spec"].isin(split.test_specs)].copy()
     if train_df.empty or test_df.empty:

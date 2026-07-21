@@ -33,7 +33,7 @@ Einordnung. Der Vortrag ist auf etwa neun Minuten und zehn Sekunden ausgelegt.
 
 # Daten & Pipelines
 
-- Z01-Z04: **gesund (Label 1)**; Z05: **anomal (Label 0)**
+- Z01-Z04: **gesund (Label 0)**; Z05: **anomal (Label 1)**
 - 440 WAV-Dateien, 62 Audiofeatures je Datei
 - Ch1 und Ch2 werden getrennt modelliert
 
@@ -82,7 +82,7 @@ Fold erneut ausgewertet.
 ![width:850px Ablauf des Autoencoders](data/assets/autoencoder_ablauf.png)
 
 **Identisch fuer alle 16 Modelle:** ReLU, Adam, Early Stopping, Seed 42;
-Training ausschliesslich mit gesunden Daten (Label 1).
+Training ausschliesslich mit gesunden Daten (Label 0).
 
 <!--
 Notizen - 55 Sekunden:
@@ -101,20 +101,21 @@ standardisierten Merkmalsraum
 
 **Schwelle:** 95%-Quantil der Fehler im gesunden Training
 
-- Klassenkonvention: anomal/Z05 = Label 0 (negativ), gesund = Label 1 (positiv)
-- oberhalb der Schwelle: anomal (Label 0)
-- keine Verwendung von Z05 zur Schwellenoptimierung
-- Z05-Erkennungsrate (Recall Label 0) und Gesund-Erkennungsrate (Recall Label 1)
-- Accuracy, Balanced Accuracy (BAR), F1 fuer die positive Klasse (Label 1)
-  und ROC-AUC fuer Anomalien (Label 0)
+- Klassenkonvention: anomal/Z05 = Label 1 (positiv), gesund = Label 0 (negativ)
+- oberhalb der Schwelle: anomal (Label 1)
+- keine Verwendung der Anomalieklasse (Z05) zur Schwellenoptimierung
+- True Positive Rate (TPR, Sensitivität/Recall): $TP/(TP+FN)$ für anomal (Label 1)
+- True Negative Rate (TNR, Spezifität): $TN/(TN+FP)$ für gesund (Label 0)
+- Accuracy, Balanced Accuracy (BA), F1-Score und ROC-AUC für die positive
+  Anomalieklasse (Label 1)
 
-**Primaerer Vergleich:** Makromittel der BAR ueber alle acht Modelle, weil die
+**Primaerer Vergleich:** Makromittel der BA ueber alle acht Modelle, weil die
 ungemittelte Pipeline ungleiche Testgruppengroessen besitzt.
 
 <!--
 Notizen - 50 Sekunden:
 Ein gepoolter Vergleich allein waere unfair: Ohne Mittelung hat Fold 4 wegen
-Z01 besonders viele Testzeilen. BAR gleicht Klassen aus; das Makromittel gibt
+Z01 besonders viele Testzeilen. BA gleicht Klassen aus; das Makromittel gibt
 zusaetzlich jedem der acht Modelle dasselbe Gewicht.
 -->
 
@@ -124,7 +125,7 @@ zusaetzlich jedem der acht Modelle dasselbe Gewicht.
 
 ![width:620px Modellmetriken Einzelmessungen](results/per_measurement/model_metric_summary.png)
 
-| Fold, Ch1 / Ch2 | Z05-Erkennung | Gesund-Erkennung | BAR |
+| Fold, Ch1 / Ch2 | TPR / Sensitivität | TNR / Spezifität | BA |
 |---|---:|---:|---:|
 | 1 | 1,000 | 0,717 / 0,733 | 0,858 / 0,867 |
 | 2 | 1,000 | 0,750 / 0,750 | 0,875 / 0,875 |
@@ -133,8 +134,9 @@ zusaetzlich jedem der acht Modelle dasselbe Gewicht.
 
 <!--
 Notizen - 65 Sekunden:
-Alle Z05-Samples werden gefunden. Fold 1 bis 3 sind gut, Fold 4 scheitert an
-vielen gesunden Z01-Fehlalarmen. Ohne Mittelung bleibt die Variation der fuenf
+Die Sensitivität beträgt in allen Folds 1,000; es treten keine False Negatives
+der Anomalieklasse auf. Fold 1 bis 3 sind gut, Fold 4 weist dagegen viele False
+Positives der gesunden Z01-Testgruppe auf. Ohne Mittelung bleibt die Variation der fuenf
 Z01-mIDs sichtbar.
 -->
 
@@ -144,7 +146,7 @@ Z01-mIDs sichtbar.
 
 ![width:600px Balanced Accuracy beider Pipelines](results/comparison/balanced_accuracy_by_fold.png)
 
-| BAR, Kanaele gepoolt | Einzelmessung | mID-gemittelt |
+| BA, Kanaele gepoolt | Einzelmessung | mID-gemittelt |
 |---|---:|---:|
 | Fold 1 | 0,863 | **1,000** |
 | Fold 2 | **0,875** | 0,838 |
@@ -152,7 +154,7 @@ Z01-mIDs sichtbar.
 | Fold 4 | 0,617 | **0,750** |
 | Makromittel 8 Modelle | **0,814** | 0,781 |
 
-Z05-Erkennung in beiden Pipelines und allen Modellen: **1,000**.
+TPR/Sensitivität in beiden Pipelines und allen Modellen: **1,000**.
 
 <!--
 Notizen - 75 Sekunden:
@@ -171,7 +173,7 @@ Modellmakro bleibt die Einzelmessung mit 0,814 gegenueber 0,781 vorne.
 - Fold 1 profitiert ebenfalls von geglaettetem Z04 im Test
 - Fold 3 verschlechtert sich: Z02 bleibt im Test ungemittelt; im Training werden
   Z01 und Z04 geglaettet, Z03 dagegen nicht
-- Fold 3 Gesund-Erkennung: Ch1 **0,050**, Ch2 **0,100**
+- Fold 3 TNR/Spezifität: Ch1 **0,050**, Ch2 **0,100**
 - Die Mittelung veraendert damit die Definition des gelernten Normalzustands
 
 <!--
@@ -186,8 +188,8 @@ Verteilungsabweichung, nicht direkt die Schadensursache.
 
 # Diskussion
 
-- **Robust:** Beide Varianten erkennen jeweils 160/160 Z05-Testentscheidungen
-- **Einzelmessung:** bessere Makro-BAR und stabiler in Fold 2/3
+- **Robust:** Beide Varianten erreichen eine TPR/Sensitivität von **1,000**
+- **Einzelmessung:** bessere Makro-BA und stabiler in Fold 2/3
 - **mID-Mittelung:** weniger Z01/Z04-Variation, bessere Folds 1/4 und hoehere
   gepoolte AUC von 0,970
 - **Risiko der Mittelung:** inkonsistente Vorverarbeitung, weil nur Z01 und Z04
@@ -210,9 +212,10 @@ die Mittelung einen Fold verbessern und einen anderen verschlechtern.
 # Fazit
 
 1. Zwei sauber getrennte 4x2-Pipelines ergeben insgesamt 16 Autoencoder.
-2. Z05 wird immer erkannt: **Z05-Erkennungsrate 1,000**.
+2. Keine tatsächlich anomale Messung wird als gesund vorhergesagt:
+   **TPR/Sensitivität 1,000**.
 3. Die mID-Mittelung verbessert Fold 1 und 4, verschlechtert Fold 2 und besonders Fold 3.
-4. Im fairen Makromittel ist die Einzelmessung besser: **BAR 0,814 vs. 0,781**.
+4. Im fairen Makromittel ist die Einzelmessung besser: **BA 0,814 vs. 0,781**.
 
 ## Kernaussage
 
