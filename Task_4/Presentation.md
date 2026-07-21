@@ -43,7 +43,8 @@ Einordnung. Der Vortrag ist auf etwa neun Minuten und zehn Sekunden ausgelegt.
 | mID-gemittelt | Mittel je `spec`, `pos`, `rID`, Kanal | 200 |
 
 Nach Mittelung besitzt jede Z-Gruppe genau 20 Samples je Kanal. Z01 fasst je
-Sample 5 mIDs, Z04 3 mIDs zusammen; Z02, Z03 und Z05 besitzen nur eine mID.
+gemitteltem Sample 5 mIDs, Z04 3 mIDs zusammen; Z02, Z03 und Z05 besitzen nur
+eine mID.
 
 <!--
 Notizen - 55 Sekunden:
@@ -100,13 +101,15 @@ standardisierten Merkmalsraum
 
 **Schwelle:** 95%-Quantil der Fehler im gesunden Training
 
+- Klassenkonvention: anomal/Z05 = Label 0 (negativ), gesund = Label 1 (positiv)
 - oberhalb der Schwelle: anomal (Label 0)
 - keine Verwendung von Z05 zur Schwellenoptimierung
-- Sensitivitaet fuer Z05 und Spezifitaet fuer gesunde Testgruppen
-- Accuracy, Balanced Accuracy (BAR), F1 und ROC-AUC
+- Z05-Erkennungsrate (Recall Label 0) und Gesund-Erkennungsrate (Recall Label 1)
+- Accuracy, Balanced Accuracy (BAR), F1 fuer die positive Klasse (Label 1)
+  und ROC-AUC fuer Anomalien (Label 0)
 
 **Primaerer Vergleich:** Makromittel der BAR ueber alle acht Modelle, weil die
-ungefilterte Pipeline ungleiche Testgruppengroessen besitzt.
+ungemittelte Pipeline ungleiche Testgruppengroessen besitzt.
 
 <!--
 Notizen - 50 Sekunden:
@@ -121,7 +124,7 @@ zusaetzlich jedem der acht Modelle dasselbe Gewicht.
 
 ![width:620px Modellmetriken Einzelmessungen](results/per_measurement/model_metric_summary.png)
 
-| Fold, Ch1 / Ch2 | Sensitivitaet | Spezifitaet | BAR |
+| Fold, Ch1 / Ch2 | Z05-Erkennung | Gesund-Erkennung | BAR |
 |---|---:|---:|---:|
 | 1 | 1,000 | 0,717 / 0,733 | 0,858 / 0,867 |
 | 2 | 1,000 | 0,750 / 0,750 | 0,875 / 0,875 |
@@ -149,7 +152,7 @@ Z01-mIDs sichtbar.
 | Fold 4 | 0,617 | **0,750** |
 | Makromittel 8 Modelle | **0,814** | 0,781 |
 
-Sensitivitaet in beiden Pipelines und allen Modellen: **1,000**.
+Z05-Erkennung in beiden Pipelines und allen Modellen: **1,000**.
 
 <!--
 Notizen - 75 Sekunden:
@@ -166,16 +169,16 @@ Modellmakro bleibt die Einzelmessung mit 0,814 gegenueber 0,781 vorne.
 
 - Fold 4 profitiert: mID-Variation von Z01 wird geglaettet
 - Fold 1 profitiert ebenfalls von geglaettetem Z04 im Test
-- Fold 3 verschlechtert sich: Z02 bleibt ungemittelt, waehrend Z01 und Z04 im
-  Training geglaettet werden
-- Fold 3 Spezifitaet: Ch1 **0,050**, Ch2 **0,100**
+- Fold 3 verschlechtert sich: Z02 bleibt im Test ungemittelt; im Training werden
+  Z01 und Z04 geglaettet, Z03 dagegen nicht
+- Fold 3 Gesund-Erkennung: Ch1 **0,050**, Ch2 **0,100**
 - Die Mittelung veraendert damit die Definition des gelernten Normalzustands
 
 <!--
 Notizen - 75 Sekunden:
 Die gruene Verteilung ist gesundes Z02, liegt aber fast komplett rechts von der
-Schwelle. Das Modell kennt in diesem Fold teilweise geglaettete Normaldaten.
-Ungemitteltes Z02 wirkt relativ dazu neu. Der Autoencoder erkennt erneut
+Schwelle. Das Training mischt geglaettete Z01- und Z04-Samples mit ungemitteltem
+Z03. Ungemitteltes Z02 wirkt relativ dazu neu. Der Autoencoder erkennt erneut
 Verteilungsabweichung, nicht direkt die Schadensursache.
 -->
 
@@ -183,7 +186,7 @@ Verteilungsabweichung, nicht direkt die Schadensursache.
 
 # Diskussion
 
-- **Robust:** Beide Varianten erkennen 160/160 Z05-Testentscheidungen
+- **Robust:** Beide Varianten erkennen jeweils 160/160 Z05-Testentscheidungen
 - **Einzelmessung:** bessere Makro-BAR und stabiler in Fold 2/3
 - **mID-Mittelung:** weniger Z01/Z04-Variation, bessere Folds 1/4 und hoehere
   gepoolte AUC von 0,970
@@ -207,7 +210,7 @@ die Mittelung einen Fold verbessern und einen anderen verschlechtern.
 # Fazit
 
 1. Zwei sauber getrennte 4x2-Pipelines ergeben insgesamt 16 Autoencoder.
-2. Z05 wird immer erkannt: **Sensitivitaet 1,000**.
+2. Z05 wird immer erkannt: **Z05-Erkennungsrate 1,000**.
 3. Die mID-Mittelung verbessert Fold 1 und 4, verschlechtert Fold 2 und besonders Fold 3.
 4. Im fairen Makromittel ist die Einzelmessung besser: **BAR 0,814 vs. 0,781**.
 

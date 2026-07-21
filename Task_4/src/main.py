@@ -161,13 +161,29 @@ def aggregate_predictions(predictions: pd.DataFrame, group_columns: list[str]) -
 
 
 def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path, pipeline_name: str) -> None:
-    columns = ["sensitivity_anomaly", "specificity_normal", "balanced_accuracy", "f1_anomaly"]
+    columns = [
+        "specificity_anomaly_0",
+        "sensitivity_healthy_1",
+        "balanced_accuracy",
+        "f1_healthy_1",
+    ]
+    display_labels = {
+        "specificity_anomaly_0": "Z05-Erkennung",
+        "sensitivity_healthy_1": "Gesund-Erkennung",
+        "balanced_accuracy": "Balanced Accuracy",
+        "f1_healthy_1": "F1 Gesund (Label 1)",
+    }
     labels = metrics_df["fold"] + " " + metrics_df["channel"]
     x = np.arange(len(metrics_df))
     width = 0.19
     fig, ax = plt.subplots(figsize=(12, 6))
     for index, column in enumerate(columns):
-        ax.bar(x + (index - 1.5) * width, metrics_df[column], width, label=column)
+        ax.bar(
+            x + (index - 1.5) * width,
+            metrics_df[column],
+            width,
+            label=display_labels[column],
+        )
     ax.set_xticks(x, labels, rotation=35, ha="right")
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
@@ -216,9 +232,10 @@ def run_pipeline(
             all_metrics.append(metrics)
             all_predictions.append(predictions)
             print(
-                f"  Sens={metrics['sensitivity_anomaly']:.3f}, "
-                f"Spec={metrics['specificity_normal']:.3f}, "
-                f"BAR={metrics['balanced_accuracy']:.3f}, F1={metrics['f1_anomaly']:.3f}"
+                f"  Z05={metrics['specificity_anomaly_0']:.3f}, "
+                f"Gesund={metrics['sensitivity_healthy_1']:.3f}, "
+                f"BAR={metrics['balanced_accuracy']:.3f}, "
+                f"F1(gesund)={metrics['f1_healthy_1']:.3f}"
             )
 
     metrics_df = pd.DataFrame(all_metrics)
@@ -240,8 +257,10 @@ def run_pipeline(
     overall.to_csv(results_dir / "overall_metrics.csv", index=False)
 
     metric_columns = [
-        "sensitivity_anomaly", "specificity_normal", "accuracy",
-        "balanced_accuracy", "precision_anomaly", "f1_anomaly", "roc_auc_anomaly",
+        "sensitivity_healthy_1", "specificity_anomaly_0", "accuracy",
+        "balanced_accuracy", "precision_healthy_1", "f1_healthy_1",
+        "recall_anomaly_0", "precision_anomaly_0", "f1_anomaly_0",
+        "roc_auc_anomaly_0",
     ]
     macro = metrics_df[metric_columns].mean().to_frame().T
     macro.insert(0, "pipeline", pipeline_name)

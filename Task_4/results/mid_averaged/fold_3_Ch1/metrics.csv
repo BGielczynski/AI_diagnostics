@@ -1,2 +1,2 @@
-n_samples,n_anomaly,n_normal,true_positive_anomaly,false_negative_anomaly,false_positive_anomaly,true_negative_anomaly,sensitivity_anomaly,specificity_normal,accuracy,balanced_accuracy,precision_anomaly,f1_anomaly,roc_auc_anomaly,pipeline,fold,channel,train_specs,test_specs,n_train,threshold,epochs
-40,20,20,20,0,19,1,1.0,0.05,0.525,0.525,0.5128205128205128,0.6779661016949152,0.965,mid_averaged,fold_3,Ch1,Z01+Z03+Z04,Z02+Z05,60,0.6205641642963768,277
+n_samples,n_anomaly,n_healthy,true_negative,false_positive,false_negative,true_positive,sensitivity_healthy_1,specificity_anomaly_0,accuracy,balanced_accuracy,precision_healthy_1,f1_healthy_1,recall_anomaly_0,precision_anomaly_0,f1_anomaly_0,roc_auc_anomaly_0,pipeline,fold,channel,train_specs,test_specs,n_train,threshold,epochs
+40,20,20,20,0,19,1,0.05,1.0,0.525,0.525,1.0,0.09523809523809523,1.0,0.5128205128205128,0.6779661016949152,0.965,mid_averaged,fold_3,Ch1,Z01+Z03+Z04,Z02+Z05,60,0.6205641642963768,277

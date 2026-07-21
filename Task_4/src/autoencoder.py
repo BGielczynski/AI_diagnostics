@@ -90,53 +90,87 @@ def calculate_metrics(
 ) -> dict[str, float | int]:
     anomaly_true = np.asarray(true_labels) == 0
     anomaly_pred = np.asarray(predicted_labels) == 0
-    tp = int(np.sum(anomaly_true & anomaly_pred))
-    fn = int(np.sum(anomaly_true & ~anomaly_pred))
-    fp = int(np.sum(~anomaly_true & anomaly_pred))
-    tn = int(np.sum(~anomaly_true & ~anomaly_pred))
+    # Labelkonvention des Projekts: 0 = anomal/negativ, 1 = gesund/positiv.
+    tn = int(np.sum(anomaly_true & anomaly_pred))
+    fp = int(np.sum(anomaly_true & ~anomaly_pred))
+    fn = int(np.sum(~anomaly_true & anomaly_pred))
+    tp = int(np.sum(~anomaly_true & ~anomaly_pred))
 
-    sensitivity = tp / (tp + fn) if tp + fn else 0.0
-    specificity = tn / (tn + fp) if tn + fp else 0.0
-    precision = tp / (tp + fp) if tp + fp else 0.0
+    sensitivity_healthy = tp / (tp + fn) if tp + fn else 0.0
+    specificity_anomaly = tn / (tn + fp) if tn + fp else 0.0
+    precision_healthy = tp / (tp + fp) if tp + fp else 0.0
+    f1_healthy = (
+        2 * precision_healthy * sensitivity_healthy
+        / (precision_healthy + sensitivity_healthy)
+        if precision_healthy + sensitivity_healthy
+        else 0.0
+    )
+    precision_anomaly = tn / (tn + fn) if tn + fn else 0.0
+    recall_anomaly = specificity_anomaly
+    f1_anomaly = (
+        2 * precision_anomaly * recall_anomaly
+        / (precision_anomaly + recall_anomaly)
+        if precision_anomaly + recall_anomaly
+        else 0.0
+    )
     accuracy = (tp + tn) / (tp + tn + fp + fn)
-    f1 = 2 * precision * sensitivity / (precision + sensitivity) if precision + sensitivity else 0.0
     anomaly_targets = anomaly_true.astype(int)
     auc = roc_auc_score(anomaly_targets, scores) if len(np.unique(anomaly_targets)) == 2 else np.nan
     return {
         "n_samples": len(true_labels),
         "n_anomaly": int(np.sum(anomaly_true)),
-        "n_normal": int(np.sum(~anomaly_true)),
-        "true_positive_anomaly": tp,
-        "false_negative_anomaly": fn,
-        "false_positive_anomaly": fp,
-        "true_negative_anomaly": tn,
-        "sensitivity_anomaly": sensitivity,
-        "specificity_normal": specificity,
+        "n_healthy": int(np.sum(~anomaly_true)),
+        "true_negative": tn,
+        "false_positive": fp,
+        "false_negative": fn,
+        "true_positive": tp,
+        "sensitivity_healthy_1": sensitivity_healthy,
+        "specificity_anomaly_0": specificity_anomaly,
         "accuracy": accuracy,
-        "balanced_accuracy": (sensitivity + specificity) / 2,
-        "precision_anomaly": precision,
-        "f1_anomaly": f1,
-        "roc_auc_anomaly": auc,
+        "balanced_accuracy": (sensitivity_healthy + specificity_anomaly) / 2,
+        "precision_healthy_1": precision_healthy,
+        "f1_healthy_1": f1_healthy,
+        "recall_anomaly_0": recall_anomaly,
+        "precision_anomaly_0": precision_anomaly,
+        "f1_anomaly_0": f1_anomaly,
+        "roc_auc_anomaly_0": auc,
     }
 
 
 def plot_confusion_matrix(metrics: dict, output_path: Path, title: str) -> None:
     matrix = np.array(
         [
-            [metrics["true_positive_anomaly"], metrics["false_negative_anomaly"]],
-            [metrics["false_positive_anomaly"], metrics["true_negative_anomaly"]],
+            [metrics["true_negative"], metrics["false_positive"]],
+            [metrics["false_negative"], metrics["true_positive"]],
         ]
     )
-    fig, ax = plt.subplots(figsize=(6.4, 5.2))
+    cell_labels = np.array(
+        [
+            ["TN", "FP"],
+            ["FN", "TP"],
+        ]
+    )
+    fig, ax = plt.subplots(figsize=(7.2, 6.0))
     image = ax.imshow(matrix, cmap="Blues")
-    ax.set_xticks([0, 1], ["Anomal", "Gesund"])
-    ax.set_yticks([0, 1], ["Anomal", "Gesund"])
+    ax.set_xticks([0, 1], ["Anomal\n(Label 0)", "Gesund\n(Label 1)"])
+    ax.set_yticks([0, 1], ["Anomal\n(Label 0)", "Gesund\n(Label 1)"])
     ax.set_xlabel("Vorhergesagt")
     ax.set_ylabel("Tatsaechlich")
-    ax.set_title(title)
+    ax.set_title(f"{title}\nNegativ: anomal (0) | Positiv: gesund (1)")
+    color_threshold = float(matrix.max()) / 2 if matrix.size else 0.0
     for row in range(2):
         for column in range(2):
-            ax.text(column, row, int(matrix[row, column]), ha="center", va="center")
+            value = int(matrix[row, column])
+            ax.text(
+                column,
+                row,
+                f"{value}\n({cell_labels[row, column]})",
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="semibold",
+                color="white" if value > color_threshold else "black",
+            )
     fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
     fig.tight_layout()
     fig.savefig(output_path, dpi=170)
