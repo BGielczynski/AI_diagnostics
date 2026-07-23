@@ -142,20 +142,20 @@ def calculate_metrics(
 def plot_confusion_matrix(metrics: dict, output_path: Path, title: str) -> None:
     matrix = np.array(
         [
-            [metrics["true_negative"], metrics["false_positive"]],
-            [metrics["false_negative"], metrics["true_positive"]],
+            [metrics["true_positive"], metrics["false_negative"]],
+            [metrics["false_positive"], metrics["true_negative"]],
         ]
     )
     cell_labels = np.array(
         [
-            ["TN", "FP"],
-            ["FN", "TP"],
+            ["TP", "FN"],
+            ["FP", "TN"],
         ]
     )
     fig, ax = plt.subplots(figsize=(7.2, 6.0))
     image = ax.imshow(matrix, cmap="Blues")
-    ax.set_xticks([0, 1], ["Gesund\n(Label 0)", "Anomal\n(Label 1)"])
-    ax.set_yticks([0, 1], ["Gesund\n(Label 0)", "Anomal\n(Label 1)"])
+    ax.set_xticks([0, 1], ["Anomal\n(Label 1)", "Gesund\n(Label 0)"])
+    ax.set_yticks([0, 1], ["Anomal\n(Label 1)", "Gesund\n(Label 0)"])
     ax.set_xlabel("Vorhergesagt")
     ax.set_ylabel("Tatsächlich")
     ax.set_title(f"{title}\nNegativ: gesund (0) | Positiv: anomal (1)")
