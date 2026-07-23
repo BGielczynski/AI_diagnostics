@@ -33,7 +33,7 @@ Einordnung. Der Vortrag ist auf etwa neun Minuten und dreissig Sekunden ausgeleg
 
 # Daten & Pipelines
 
-- Z01-Z04: **gesund (Label 0)**; Z05: **anomal (Label 1)**
+- Z01-Z04: **gesund (Label 1)**; Z05: **anomal (Label 0)**
 - 440 WAV-Dateien, 62 Audiofeatures je Datei
 - Ch1 und Ch2 werden getrennt modelliert
 
@@ -82,7 +82,7 @@ Fold erneut ausgewertet.
 ![width:850px Ablauf des Autoencoders](data/assets/autoencoder_ablauf.png)
 
 **Identisch fuer alle 16 Modelle:** ReLU, Adam, Early Stopping, Seed 42;
-Training ausschliesslich mit gesunden Daten (Label 0).
+Training ausschliesslich mit gesunden Daten (Label 1).
 
 <!--
 Notizen - 55 Sekunden:
@@ -101,13 +101,13 @@ standardisierten Merkmalsraum
 
 **Schwelle:** 98%-Quantil der Fehler im gesunden Training
 
-- Klassenkonvention: anomal/Z05 = Label 1 (positiv), gesund = Label 0 (negativ)
-- oberhalb der Schwelle: anomal (Label 1)
+- Klassenkonvention: gesund = Label 1 (positiv), anomal/Z05 = Label 0 (negativ)
+- oberhalb der Schwelle: anomal (Label 0)
 - keine Verwendung der Anomalieklasse (Z05) zur Schwellenoptimierung
-- True Positive Rate (TPR, Sensitivität/Recall): $TP/(TP+FN)$ für anomal (Label 1)
-- True Negative Rate (TNR, Spezifität): $TN/(TN+FP)$ für gesund (Label 0)
-- Accuracy, Balanced Accuracy (BA), F1-Score und ROC-AUC für die positive
-  Anomalieklasse (Label 1)
+- True Positive Rate (TPR, Sensitivität/Recall): $TP/(TP+FN)$ für gesund (Label 1)
+- True Negative Rate (TNR, Spezifität): $TN/(TN+FP)$ für anomal (Label 0)
+- Accuracy, Balanced Accuracy (BA) und F1-Score für die positive gesunde Klasse
+  sowie ROC-AUC für die Anomalieklasse (Label 0)
 
 **Primaerer Vergleich:** Makromittel der BA ueber alle acht Modelle, weil die
 ungemittelte Pipeline ungleiche Testgruppengroessen besitzt.
@@ -129,17 +129,17 @@ uebersehen. Z05 wird nicht zur Wahl der Schwelle verwendet.
 
 | Fold, Ch1 / Ch2 | TPR / Sensitivität | TNR / Spezifität | BA |
 |---|---:|---:|---:|
-| 1 | 1,000 | 0,867 / 0,883 | 0,933 / 0,942 |
-| 2 | 1,000 | 0,900 / 0,850 | 0,950 / 0,925 |
-| 3 | 1,000 | 0,950 / 0,950 | 0,975 / 0,975 |
-| 4 | 1,000 | 0,290 / 0,730 | 0,645 / 0,865 |
+| 1 | 0,867 / 0,883 | 1,000 | 0,933 / 0,942 |
+| 2 | 0,900 / 0,850 | 1,000 | 0,950 / 0,925 |
+| 3 | 0,950 / 0,950 | 1,000 | 0,975 / 0,975 |
+| 4 | 0,290 / 0,730 | 1,000 | 0,645 / 0,865 |
 
 <!--
 Notizen - 65 Sekunden:
-Alle 16 Modelle erreichen eine Sensitivität von 1,000; es treten keine False
-Negatives der Anomalieklasse auf. Fold 1 bis 3 sind insgesamt gut. In Fold 4
-unterscheiden sich Ch1 und Ch2 deutlich; besonders Ch1 erzeugt viele False
-Positives der gesunden Z01-Testgruppe.
+Alle 16 Modelle erreichen eine Spezifität von 1,000; keine Anomalie wird als
+gesund vorhergesagt. Fold 1 bis 3 sind insgesamt gut. In Fold 4 unterscheiden
+sich Ch1 und Ch2 deutlich; besonders Ch1 erzeugt viele False Negatives der
+gesunden Z01-Testgruppe.
 -->
 
 ---
@@ -156,7 +156,7 @@ Positives der gesunden Z01-Testgruppe.
 | Fold 4 | 0,755 | **0,838** |
 | Makromittel 8 Modelle | **0,901** | 0,750 |
 
-TPR/Sensitivität in beiden Pipelines und allen Modellen: **1,000**.
+TNR/Spezifität in beiden Pipelines und allen Modellen: **1,000**.
 
 <!--
 Notizen - 75 Sekunden:
@@ -175,7 +175,7 @@ bleibt die Einzelmessung mit 0,901 gegenueber 0,750 klar vorne.
 - Fold 1 verbessert sich leicht auf BA 0,963; Fold 2 faellt auf BA 0,700
 - Fold 3 verschlechtert sich: Z02 bleibt im Test ungemittelt; im Training werden
   Z01 und Z04 geglaettet, Z03 dagegen nicht
-- Fold 3 TNR/Spezifität: Ch1 **0,000**, Ch2 **0,000**
+- Fold 3 TPR/Sensitivität: Ch1 **0,000**, Ch2 **0,000**
 - Die Mittelung veraendert damit die Definition des gelernten Normalzustands
 
 <!--
@@ -190,7 +190,7 @@ Verteilungsabweichung, nicht direkt die Schadensursache.
 
 # Diskussion
 
-- **Hohe Sensitivität:** beide Pipelines erreichen gepoolt eine TPR von **1,000**
+- **Anomalieerkennung:** beide Pipelines erreichen gepoolt eine TNR von **1,000**
 - **Einzelmessung:** deutlich bessere Makro-BA und robust in Fold 2/3
 - **mID-Mittelung:** weniger Z01/Z04-Variation, bessere Folds 1/4 und hoehere
   gepoolte AUC von 0,977
@@ -217,26 +217,26 @@ Ch1 und Ch2 werden fuer die Bewertung je Fold gepoolt.
 
 | Fold (gesunder Test) | TPR | TNR | Accuracy | BA | F1 |
 |---|---:|---:|---:|---:|---:|
-| 1 (Z04) | 1,000 | 0,875 | 0,906 | 0,938 | 0,842 |
-| 2 (Z03) | 1,000 | 0,875 | 0,938 | 0,938 | 0,941 |
-| **3 (Z02) - bestes** | **1,000** | **0,950** | **0,975** | **0,975** | **0,976** |
-| **4 (Z01) - schlechtestes** | **1,000** | **0,510** | **0,592** | **0,755** | **0,449** |
+| 1 (Z04) | 0,875 | 1,000 | 0,906 | 0,938 | 0,933 |
+| 2 (Z03) | 0,875 | 1,000 | 0,938 | 0,938 | 0,933 |
+| **3 (Z02) - bestes** | **0,950** | **1,000** | **0,975** | **0,975** | **0,974** |
+| **4 (Z01) - schlechtestes** | **0,510** | **1,000** | **0,592** | **0,755** | **0,675** |
 
 **ROC-Hinweis:** Fold 2 erreicht in Ch1 und Ch2 jeweils **ROC-AUC 1,000**.
 
 ## Kernaussage
 
 **Alle vier Fold-Modelle erkennen die Anomalien vollständig. Die Unterschiede
-entstehen durch False Positives bei den unbekannten gesunden Gruppen.**
+entstehen durch False Negatives bei den unbekannten gesunden Gruppen.**
 
 <!--
 Notizen - 50 Sekunden:
 Fuer die Schlussbewertung poolen wir beide Kanaele und betrachten die vier
 Fold-Konfigurationen getrennt. Fold 3 ist mit einer Balanced Accuracy von 0,975
 das beste Ergebnis. Fold 4 ist mit 0,755 das schlechteste, weil die unbekannte
-gesunde Gruppe Z01 98 False Positives verursacht. Fold 2 erreicht in beiden
+gesunde Gruppe Z01 98 False Negatives verursacht. Fold 2 erreicht in beiden
 Kanaelen eine ROC-AUC von 1,000: Die Score-Rangfolge trennt die Klassen perfekt,
-am festen Schwellenwert entstehen aber zwei beziehungsweise drei False Positives.
+am festen Schwellenwert entstehen aber zwei beziehungsweise drei False Negatives.
 Die Kreuzvalidierung waehlt nicht automatisch ein finales Einsatzmodell; dafuer
 wuerde anschliessend auf allen gesunden Gruppen neu trainiert. Gesamte Sprechzeit:
 etwa 9:30 Minuten.

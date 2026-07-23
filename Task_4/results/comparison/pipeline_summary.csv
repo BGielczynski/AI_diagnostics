@@ -1,5 +1,5 @@
-pipeline,n_samples,n_anomaly,n_healthy,true_negative,false_positive,false_negative,true_positive,sensitivity_anomaly_1,specificity_healthy_0,accuracy,balanced_accuracy,recall_anomaly_1,precision_anomaly_1,f1_anomaly_1,recall_healthy_0,precision_healthy_0,f1_healthy_0,roc_auc_anomaly_1,aggregation
-per_measurement,560.0,160.0,400.0,280.0,120.0,0.0,160.0,1.0,0.7,0.7857142857142857,0.85,1.0,0.5714285714285714,0.7272727272727273,0.7,1.0,0.8235294117647058,0.935984375,pooled
-per_measurement,,,,,,,,1.0,0.8025,0.8526041666666666,0.90125,1.0,0.7229695776180511,0.8094506839462089,0.8025,1.0,0.8718966066931233,0.9692083333333333,macro_8_models
-mid_averaged,320.0,160.0,160.0,80.0,80.0,0.0,160.0,1.0,0.5,0.75,0.75,1.0,0.6666666666666666,0.8,0.5,1.0,0.6666666666666666,0.9771093750000001,pooled
-mid_averaged,,,,,,,,1.0,0.5,0.75,0.75,1.0,0.7158559649793872,0.8196641974034019,0.5,0.75,0.5720807013910463,0.99125,macro_8_models
+pipeline,n_samples,n_anomaly,n_healthy,true_negative,false_positive,false_negative,true_positive,sensitivity_healthy_1,specificity_anomaly_0,accuracy,balanced_accuracy,recall_healthy_1,precision_healthy_1,f1_healthy_1,recall_anomaly_0,precision_anomaly_0,f1_anomaly_0,roc_auc_anomaly_0,aggregation
+per_measurement,560.0,160.0,400.0,160.0,0.0,120.0,280.0,0.7,1.0,0.7857142857142857,0.85,0.7,1.0,0.8235294117647058,1.0,0.5714285714285714,0.7272727272727273,0.935984375,pooled
+per_measurement,,,,,,,,0.8025,1.0,0.8526041666666666,0.90125,0.8025,1.0,0.8718966066931233,1.0,0.7229695776180511,0.8094506839462089,0.9692083333333333,macro_8_models
+mid_averaged,320.0,160.0,160.0,160.0,0.0,80.0,80.0,0.5,1.0,0.75,0.75,0.5,1.0,0.6666666666666666,1.0,0.6666666666666666,0.8,0.9771093750000001,pooled
+mid_averaged,,,,,,,,0.5,1.0,0.75,0.75,0.5,0.75,0.5720807013910463,1.0,0.7158559649793872,0.8196641974034019,0.99125,macro_8_models

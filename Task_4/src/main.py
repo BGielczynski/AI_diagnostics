@@ -174,16 +174,16 @@ def aggregate_predictions(predictions: pd.DataFrame, group_columns: list[str]) -
 
 def plot_metric_summary(metrics_df: pd.DataFrame, output_path: Path, pipeline_name: str) -> None:
     columns = [
-        "sensitivity_anomaly_1",
-        "specificity_healthy_0",
+        "sensitivity_healthy_1",
+        "specificity_anomaly_0",
         "balanced_accuracy",
-        "f1_anomaly_1",
+        "f1_healthy_1",
     ]
     display_labels = {
-        "sensitivity_anomaly_1": "TPR / Sensitivität",
-        "specificity_healthy_0": "TNR / Spezifität",
+        "sensitivity_healthy_1": "TPR / Sensitivität",
+        "specificity_anomaly_0": "TNR / Spezifität",
         "balanced_accuracy": "Balanced Accuracy",
-        "f1_anomaly_1": "F1-Score anomal (Label 1)",
+        "f1_healthy_1": "F1-Score gesund (Label 1)",
     }
     labels = metrics_df["fold"].str.replace("_", " ").str.title() + " – " + metrics_df["channel"]
     x = np.arange(len(metrics_df))
@@ -213,7 +213,7 @@ def summarize_scores_by_spec(predictions: pd.DataFrame) -> pd.DataFrame:
         predictions.groupby(["pipeline", "fold", "sID", "spec", "label"], as_index=False)
         .agg(
             n_samples=("label", "size"),
-            predicted_anomaly_rate=("predicted_label", lambda values: float(np.mean(values == 1))),
+            predicted_anomaly_rate=("predicted_label", lambda values: float(np.mean(values == 0))),
             mean_normalized_score=("normalized_anomaly_score", "mean"),
             median_normalized_score=("normalized_anomaly_score", "median"),
             max_normalized_score=("normalized_anomaly_score", "max"),
@@ -245,10 +245,10 @@ def run_pipeline(
             all_metrics.append(metrics)
             all_predictions.append(predictions)
             print(
-                f"  TPR/Sensitivität={metrics['sensitivity_anomaly_1']:.3f}, "
-                f"TNR/Spezifität={metrics['specificity_healthy_0']:.3f}, "
+                f"  TPR/Sensitivität={metrics['sensitivity_healthy_1']:.3f}, "
+                f"TNR/Spezifität={metrics['specificity_anomaly_0']:.3f}, "
                 f"BA={metrics['balanced_accuracy']:.3f}, "
-                f"F1(anomal)={metrics['f1_anomaly_1']:.3f}"
+                f"F1(gesund)={metrics['f1_healthy_1']:.3f}"
             )
 
     metrics_df = pd.DataFrame(all_metrics)
@@ -270,10 +270,10 @@ def run_pipeline(
     overall.to_csv(results_dir / "overall_metrics.csv", index=False)
 
     metric_columns = [
-        "sensitivity_anomaly_1", "specificity_healthy_0", "accuracy",
-        "balanced_accuracy", "recall_anomaly_1", "precision_anomaly_1",
-        "f1_anomaly_1", "recall_healthy_0", "precision_healthy_0",
-        "f1_healthy_0", "roc_auc_anomaly_1",
+        "sensitivity_healthy_1", "specificity_anomaly_0", "accuracy",
+        "balanced_accuracy", "recall_healthy_1", "precision_healthy_1",
+        "f1_healthy_1", "recall_anomaly_0", "precision_anomaly_0",
+        "f1_anomaly_0", "roc_auc_anomaly_0",
     ]
     macro = metrics_df[metric_columns].mean().to_frame().T
     macro.insert(0, "pipeline", pipeline_name)

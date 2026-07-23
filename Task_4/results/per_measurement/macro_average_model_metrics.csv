@@ -1,2 +1,2 @@
-pipeline,sensitivity_anomaly_1,specificity_healthy_0,accuracy,balanced_accuracy,recall_anomaly_1,precision_anomaly_1,f1_anomaly_1,recall_healthy_0,precision_healthy_0,f1_healthy_0,roc_auc_anomaly_1
-per_measurement,1.0,0.8025,0.8526041666666666,0.90125,1.0,0.7229695776180511,0.8094506839462089,0.8025,1.0,0.8718966066931233,0.9692083333333333
+pipeline,sensitivity_healthy_1,specificity_anomaly_0,accuracy,balanced_accuracy,recall_healthy_1,precision_healthy_1,f1_healthy_1,recall_anomaly_0,precision_anomaly_0,f1_anomaly_0,roc_auc_anomaly_0
+per_measurement,0.8025,1.0,0.8526041666666666,0.90125,0.8025,1.0,0.8718966066931233,1.0,0.7229695776180511,0.8094506839462089,0.9692083333333333
